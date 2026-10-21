@@ -1,0 +1,1004 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Neurostore Pipeline Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: full-height app; pan/zoom SVG canvas on the left, detail panel on the right (stacks under the canvas on phones). */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --surface-2:#e4e9ee; --ink:#15202b; --ink-2:#4b5866; --ink-3:#7b8794; --line:#c3ccd5;
+  --sel:#1f47c4; --plan:#b45309; --spec:#6b7280; --ok:#2f7d32;
+  --c-ext:#7a6e62; --c-ing:#0d8578; --c-pondie:#7b4bc4; --c-store:#2a68c9; --c-compose:#b0367e; --c-runner:#8b5e34; --c-nimare:#c0392b; --c-autonima:#3e8a2e; --c-contract:#56657a; --c-user:#3b4a5a;
+  --f-diagram:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --surface:#17202a; --surface-2:#1f2a35; --ink:#e4eaf0; --ink-2:#a7b3bf; --ink-3:#74818e; --line:#33414e;
+  --sel:#7fa4ff; --plan:#f5a524; --spec:#9aa4b2; --ok:#7cc67f;
+  --c-ext:#b2a596; --c-ing:#36bfae; --c-pondie:#a88bef; --c-store:#6aa3f5; --c-compose:#e27ab8; --c-runner:#c9975f; --c-nimare:#f0786a; --c-autonima:#7fcb69; --c-contract:#9eacbd; --c-user:#b8c4d0;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --surface:#17202a; --surface-2:#1f2a35; --ink:#e4eaf0; --ink-2:#a7b3bf; --ink-3:#74818e; --line:#33414e;
+  --sel:#7fa4ff; --plan:#f5a524; --spec:#9aa4b2; --ok:#7cc67f;
+  --c-ext:#b2a596; --c-ing:#36bfae; --c-pondie:#a88bef; --c-store:#6aa3f5; --c-compose:#e27ab8; --c-runner:#c9975f; --c-nimare:#f0786a; --c-autonima:#7fcb69; --c-contract:#9eacbd; --c-user:#b8c4d0;
+  color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.app{height:100%;display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--surface)}
+header h1{font-family:var(--f-diagram);font-weight:700;font-size:19px;letter-spacing:.01em;margin:0;text-wrap:balance}
+header h1 small{font-weight:400;color:var(--ink-3);font-size:13px;margin-left:6px}
+.tabs{display:flex;gap:2px;background:var(--surface-2);border-radius:8px;padding:3px}
+.tabs button,.btn{font:500 13px var(--f-body);border:0;background:transparent;color:var(--ink-2);padding:6px 12px;border-radius:6px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.btn{border:1px solid var(--line);background:var(--surface)}
+.btn:hover,.tabs button:hover{color:var(--ink)}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.legend button{display:flex;align-items:center;gap:6px;font:500 12px var(--f-body);color:var(--ink-2);background:transparent;border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 8px;cursor:pointer}
+.legend button[aria-pressed="false"]{opacity:.45;text-decoration:line-through}
+.legend svg{width:26px;height:8px}
+main{flex:1;display:flex;min-height:0}
+.canvas{position:relative;flex:1;min-width:0;background:var(--bg);overflow:hidden;touch-action:none}
+.canvas svg{width:100%;height:100%;display:block;cursor:grab;user-select:none}
+.canvas svg.dragging{cursor:grabbing}
+.zoomctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:4px}
+.zoomctl button{width:34px;height:34px;font:600 16px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;cursor:pointer}
+.hint{position:absolute;left:12px;bottom:12px;font-size:12px;color:var(--ink-3);background:color-mix(in srgb,var(--surface) 85%,transparent);padding:4px 8px;border-radius:6px;pointer-events:none}
+aside{width:380px;flex:none;border-left:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:0}
+aside .tabs{margin:10px 14px 0}
+.panel{overflow:auto;padding:14px 18px 28px;flex:1;min-height:0}
+.panel h2{font-family:var(--f-diagram);font-size:20px;font-weight:700;margin:2px 0 6px;text-wrap:balance}
+.panel h3{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:16px 0 6px}
+.panel p{margin:0 0 8px;max-width:65ch}
+.panel ul{margin:0 0 8px;padding-left:18px}
+.panel li{margin:2px 0}
+.ref{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);word-break:break-all}
+.pill{display:inline-block;font:600 11px var(--f-body);letter-spacing:.03em;padding:2px 8px;border-radius:999px;border:1px solid currentColor}
+.pill.impl{color:var(--ok)} .pill.plan{color:var(--plan)} .pill.spec{color:var(--spec)}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;color:var(--ink-2);font-size:12px}
+.swatch{width:10px;height:10px;border-radius:3px;display:inline-block}
+.steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.steps button{width:100%;text-align:left;display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;font:13px var(--f-body);color:var(--ink);background:var(--surface-2);border:1px solid transparent;border-radius:8px;padding:8px 10px;cursor:pointer}
+.steps button[aria-current="true"]{border-color:var(--sel);background:color-mix(in srgb,var(--sel) 10%,var(--surface))}
+.steps .n{font:700 13px var(--f-diagram);color:var(--ink-3);font-variant-numeric:tabular-nums}
+.steps b{font-weight:600}
+.steps span.d{display:block;color:var(--ink-2);font-size:12px;margin-top:2px}
+.track{display:flex;gap:6px;margin:4px 0 10px}
+.gap{border-left:3px solid var(--plan);padding:4px 0 4px 10px;margin:0 0 12px}
+.gap.spec{border-color:var(--spec)} .gap.ok{border-color:var(--ok)}
+.gap b{display:block}
+.rels{list-style:none;padding:0}
+.rels li{margin:3px 0}
+.linkbtn{background:none;border:0;padding:0;color:var(--sel);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+table.f{border-collapse:collapse;width:100%;font-size:12.5px}
+table.f td{border-top:1px solid var(--line);padding:4px 6px 4px 0;vertical-align:top}
+table.f td:first-child{font-family:var(--f-mono);font-size:12px;white-space:nowrap;color:var(--ink)}
+table.f td:last-child{color:var(--ink-2)}
+.repos{font-size:12.5px} .repos td{padding:2px 8px 2px 0;border-top:1px solid var(--line)}
+/* SVG */
+.box rect.frame{fill:var(--surface);stroke-width:1.6}
+.box .title{font:700 22px var(--f-diagram);fill:var(--ink)}
+.box .bsub{font:400 13px var(--f-body);fill:var(--ink-2)}
+.box .head{opacity:.12}
+.chip rect{stroke-width:1.2}
+.chip .lab{font:600 14px var(--f-diagram);fill:var(--ink)}
+.chip .sub{font:400 10.5px var(--f-body);fill:var(--ink-2)}
+.chip.plan rect,.chip.spec rect{stroke-dasharray:5 3}
+.chip:hover rect,.box:hover rect.frame{stroke-width:2.4}
+.node{cursor:pointer}
+.edge path.line{fill:none;stroke-width:1.8}
+.edge.impl path.line{stroke:var(--ink-2)}
+.edge.plan path.line{stroke:var(--plan);stroke-dasharray:8 5}
+.edge.spec path.line{stroke:var(--spec);stroke-dasharray:2 4}
+.edge.map path.line{stroke:var(--sel);stroke-dasharray:6 3;stroke-width:1.5}
+.edge.rel path.line{stroke:var(--ink-3);stroke-width:1.1}
+.edge path.hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
+.elab rect{fill:var(--surface);stroke:var(--line)}
+.elab text{font:500 11.5px var(--f-body);fill:var(--ink-2)}
+.edge.plan .elab text{fill:var(--plan)}
+.edge.map .elab text{fill:var(--sel)}
+.cluster rect.frame{fill:color-mix(in srgb,var(--surface) 55%,transparent);stroke-width:1.4}
+.cluster .title{font:700 20px var(--f-diagram);fill:var(--ink)}
+.cluster .bsub{font:400 12px var(--f-body);fill:var(--ink-2)}
+.ent rect{fill:var(--surface);stroke-width:1.2}
+.ent .lab{font:600 13.5px var(--f-diagram);fill:var(--ink)}
+.ent .sub{font:400 10px var(--f-mono);fill:var(--ink-3)}
+.peek{font:500 13px var(--f-body);fill:var(--ink-3);letter-spacing:.02em}
+.ctitle{font-family:var(--f-diagram);font-weight:700;letter-spacing:-.005em}
+.csub{font:400 14px var(--f-body);fill:var(--ink-2)}
+.collapsible:not(.open) .hdr-open,.collapsible.open .hdr-closed{display:none}
+.band{font:600 10px var(--f-body);letter-spacing:.12em;fill:var(--ink-3);text-transform:uppercase}
+svg[data-lod="far"] .lod-mid,svg[data-lod="far"] .lod-near,svg[data-lod="mid"] .lod-near{display:none}
+svg.focus .node,svg.focus .edge{opacity:.16;transition:opacity .2s}
+svg.focus .hl{opacity:1!important}
+svg.focus .node.hl rect,svg.focus .node.hl rect.frame{stroke:var(--sel)!important;stroke-width:2.6}
+svg.focus .edge.hl path.line{stroke-width:2.8}
+.hidden-status{display:none}
+@media (prefers-reduced-motion:reduce){svg.focus .node,svg.focus .edge{transition:none}}
+@media (max-width:820px){
+  main{flex-direction:column}
+  .canvas{flex:none;height:58vh}
+  aside{width:auto;border-left:0;border-top:1px solid var(--line);flex:1}
+  .legend{margin-left:0}
+  header h1 small{display:none}
+}
+</style>
+
+<div class="app">
+<header>
+  <h1>Neurostore Pipeline Atlas <small>ingestion → curation → meta-analysis</small></h1>
+  <div class="tabs" role="tablist" aria-label="Diagram view">
+    <button id="v-system" role="tab" aria-selected="true">Components &amp; pipelines</button>
+    <button id="v-schema" role="tab" aria-selected="false">Data schemas</button>
+  </div>
+  <div class="legend" aria-label="Edge status filter">
+    <button id="lg-impl" aria-pressed="true" data-status="impl"><svg viewBox="0 0 26 8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ink-2)" stroke-width="2"/></svg>Built</button>
+    <button id="lg-plan" aria-pressed="true" data-status="plan"><svg viewBox="0 0 26 8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--plan)" stroke-width="2" stroke-dasharray="6 4"/></svg>Intended, not built</button>
+    <button id="lg-spec" aria-pressed="true" data-status="spec"><svg viewBox="0 0 26 8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--spec)" stroke-width="2" stroke-dasharray="2 3"/></svg>Spec only</button>
+    <button id="lg-map" aria-pressed="true" data-status="map"><svg viewBox="0 0 26 8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--sel)" stroke-width="2" stroke-dasharray="5 3"/></svg>Cross-schema join</button>
+  </div>
+</header>
+<main>
+  <div class="canvas" id="canvas">
+    <svg id="svg" viewBox="0 0 2000 1360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Interactive architecture diagram">
+      <defs>
+        <marker id="ar-impl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink-2)"/></marker>
+        <marker id="ar-plan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--plan)"/></marker>
+        <marker id="ar-spec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--spec)"/></marker>
+        <marker id="ar-map" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--sel)"/></marker>
+        <marker id="ar-rel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink-3)"/></marker>
+      </defs>
+      <g id="g-system"></g>
+      <g id="g-schema" style="display:none"></g>
+    </svg>
+    <div class="zoomctl">
+      <button id="z-in" aria-label="Zoom in">+</button>
+      <button id="z-out" aria-label="Zoom out">−</button>
+      <button id="z-fit" aria-label="Fit to view" style="font-size:12px">fit</button>
+      <button id="z-close" aria-label="Close all boxes" title="Close all boxes" style="font-size:11px">close</button>
+    </div>
+    <div class="hint">Click a box to open it · click its frame again to close · scroll or pinch to zoom · drag to pan</div>
+  </div>
+  <aside>
+    <div class="tabs" role="tablist" aria-label="Panel">
+      <button id="p-flow" role="tab" aria-selected="true">Flow</button>
+      <button id="p-detail" role="tab" aria-selected="false">Details</button>
+      <button id="p-gaps" role="tab" aria-selected="false">Gaps</button>
+      <button id="p-src" role="tab" aria-selected="false">Sources</button>
+    </div>
+    <div class="panel" id="panel"></div>
+  </aside>
+</main>
+</div>
+
+<script>
+(() => {
+const NS = 'http://www.w3.org/2000/svg';
+const $ = s => document.querySelector(s);
+const svg = $('#svg');
+const H = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ----------------------------------------------------------------------------
+   REPOS (latest default branch, cloned 2026-10-20)
+---------------------------------------------------------------------------- */
+const REPOS = {
+  ing:      {name:'ns-pond-ingestion-workflow', gh:'jdkent/ns-pond-ingestion-workflow', br:'main',   sha:'658a13c', date:'2026-10-20'},
+  pondie:   {name:'pondie',                     gh:'neurostuff/pondie',                 br:'main',   sha:'fb9d7da', date:'2026-10-18'},
+  store:    {name:'neurostore (store)',         gh:'neurostuff/neurostore',             br:'master', sha:'d1bab34', date:'2026-10-19'},
+  compose:  {name:'neurostore (compose)',       gh:'neurostuff/neurostore',             br:'master', sha:'d1bab34', date:'2026-10-19'},
+  spec:     {name:'neurostore-spec',            gh:'neurostuff/neurostore-spec',        br:'main',   sha:'8aa1e05', date:'2026-10-18'},
+  schema:   {name:'study_schema',               gh:'neurostuff/study_schema',           br:'main',   sha:'7c0425a', date:'2026-10-18'},
+  nimads:   {name:'NIMADS',                     gh:'neurostuff/NIMADS',                 br:'main',   sha:'2b6f0d3', date:'2026-02-12'},
+  nimare:   {name:'NiMARE',                     gh:'neurostuff/NiMARE',                 br:'main',   sha:'ea8696e', date:'2026-10-08'},
+  autonima: {name:'autonima',                   gh:'neurostuff/autonima',               br:'master', sha:'3f50b65', date:'2026-09-30'},
+  runner:   {name:'compose-runner',             gh:'neurostuff/compose-runner',         br:'main',   sha:'1cfc337', date:'2026-10-02'},
+};
+
+/* ----------------------------------------------------------------------------
+   SYSTEM VIEW: component boxes and their internal stages
+---------------------------------------------------------------------------- */
+const BOX = {
+  user:    {x:1110,y:28, w:420,h:74, c:'user', title:'Researchers & curators', sub:'neurosynth-compose web app (React) · Auth0 login', repo:'compose',
+            desc:'People who upload or edit studies in neurostore and build meta-analyses in neurosynth-compose. The frontend talks to both APIs through the generated TypeScript SDKs.', refs:['compose/neurosynth-frontend/src/pages/*','store/backend/neurostore/config.py:153 (Auth0 tenant neurosynth.us.auth0.com)']},
+  sources: {x:20,  y:150,w:200,h:470, c:'ext', title:'Literature', sub:'External APIs & corpora', desc:'Publisher, index and open-access services that the ingestion workflow and autonima read from.'},
+  ing:     {x:260, y:150,w:700,h:470, c:'ing', title:'ns-pond-ingestion-workflow', sub:'`ingest` CLI · 15 stages in STAGE_ORDER · resumable via fingerprints', repo:'ing',
+            desc:'Single-process, batch pipeline (batches of 500 articles; thread/process pools inside a stage, no queue). Downloads articles, extracts text and tables, gets bibliographic metadata, parses coordinates with LLMs, classifies coordinate-set roles, and emits study_schema C2/C3 contracts that are synced to the ns-pond tree and uploaded to neurostore.',
+            refs:['ingestion_workflow/pipeline/stages/__init__.py (STAGE_ORDER, PROSE_STAGES, OPT_IN_STAGES)','ingestion_workflow/pipeline/scheduler.py (run_stages)','configs/settings_reference.yaml']},
+  nspond:  {x:300, y:650,w:330,h:80, c:'ing', title:'ns-pond tree', sub:'file contract on beast · read by pondie', repo:'ing', small:true,
+            desc:'Directory layout written by the sync stage (pyarty layout). Per base study: identifiers.json; processed/<source>/{metadata.json, tables.jsonl, analyses.jsonl, coordinates.csv, text.txt}; stage1/analyses.json (with roles); parse/parsed_paper.json (C2) and parse/coordinate_parse.json (C3). Articles without a base study go to <root>-new/, retracted ones to <root>-retracted/.',
+            refs:['ingestion_workflow/services/nspond.py','ingestion_workflow/services/nspond_schema.py','ingestion_workflow/services/paper_parse.py']},
+  pondie:  {x:260, y:760,w:700,h:260, c:'pondie', title:'pondie', sub:'LLM study-metadata extraction · groups, tasks, modality, models, analyses', repo:'pondie',
+            desc:'Extracts a full study record (storage-schema Study with every scalar wrapped in ExtractedValue + evidence quotes) from the full text and the coordinate parse. Default stages: tables → split → single → fill → evidence → build → repair. Model is a required CLI argument (scripts default to gpt-6-luna via a Portkey gateway; codex backend optional).',
+            refs:['pondie/extraction/models.py (StageName)','pondie/extraction/stages.py (sequence)','pondie/cli.py','pondie/extraction/llm.py (GatewayCaller, CodexCaller)']},
+  contracts:{x:20, y:660,w:200,h:440, c:'contract', title:'Contracts', sub:'click: who writes & reads', desc:'The shapes exchanged between applications. study_schema (LinkML → pydantic + JSON Schema) defines the paper parse and study record; NIMADS (JSON Schema) is the meta-analysis interchange; neurostore-spec is the OpenAPI surface that references NIMADS base schemas.'},
+  store:   {x:1060,y:150,w:520,h:560, c:'store', title:'neurostore', sub:'Flask/connexion API · Postgres 17 + pgvector · outbox workers', repo:'store',
+            desc:'The study store. Holds bibliographic base studies and their versions, NIMADS-shaped studysets/annotations, pipeline results used as filters, and the study_schema claim layer (StudyEntity / FieldClaim) that records machine and human values field by field.',
+            refs:['store/docker-compose.yml','store/backend/neurostore/models/data.py','store/backend/neurostore/ingest/study_schema.py']},
+  compose: {x:1060,y:780,w:520,h:320, c:'compose', title:'neurosynth-compose', sub:'project → curation → extraction → spec → run → results', repo:'compose',
+            desc:'Meta-analysis builder (lives in the neurostore repo under compose/). Projects keep curation and extraction state in Project.provenance; meta-analyses store a NiMARE specification plus snapshots of the neurostore studyset and annotation; runs are dispatched to compose-runner.',
+            refs:['compose/docker-compose.yml','compose/backend/neurosynth_compose/models/analysis.py','compose/neurosynth-frontend/src/hooks/projects/Project.types.ts']},
+  nimare:  {x:1680,y:150,w:300,h:570, c:'nimare', title:'NiMARE', sub:'library · 0.22.0 pinned by compose-runner', repo:'nimare',
+            desc:'Python library that executes coordinate- and image-based meta-analyses. Studyset (columnar NIMADS) is the canonical input; Dataset is deprecated since 0.21.0.',
+            refs:['nimare/studyset/studyset.py','nimare/workflows/base.py','nimare/meta/cbma/','nimare/meta/ibma.py']},
+  runner:  {x:1680,y:780,w:300,h:560, c:'runner', title:'compose-runner', sub:'Lambda → Step Functions → Fargate', repo:'runner',
+            desc:'Executes one compose meta-analysis: pulls the spec from compose and the live studyset/annotation from neurostore, builds NiMARE objects, runs the workflow and uploads maps and tables back to compose.',
+            refs:['compose_runner/run.py (Runner.run_workflow:236)','infra/cdk/stacks/compose_runner_stack.py','compose_runner/aws_lambda/']},
+  autonima:{x:260, y:1110,w:1180,h:220, c:'autonima', title:'autonima', sub:'automated meta-analysis from a YAML config · CLI + web UI', repo:'autonima',
+            desc:'End-to-end LLM-assisted meta-analysis: search → screen → retrieve full text → screen → parse coordinates → annotate analyses against criteria → NIMADS → NiMARE. Accepts any local full text and pre-extracted coordinates; writes its own NIMADS JSON.',
+            refs:['autonima/pipeline.py (AutonimaPipeline.run:395-417)','autonima/models/types.py (PipelineConfig:387)','autonima/meta.py']},
+  nv:      {x:1470,y:1140,w:180,h:64, c:'ext', title:'NeuroVault', sub:'statistical map hosting', small:true, desc:'Receives meta-analysis result maps from the compose Celery worker (task neurovault.upload). compose-runner accepts an --nv-key but does not use it.', refs:['compose/backend/neurosynth_compose/resources/tasks.py']},
+};
+
+// chip(id, box, x, y, w, h, label, sub, detail)
+const CHIPS = [];
+function chip(id, box, rx, ry, w, h, label, sub, d={}) { CHIPS.push({id, box, rx, ry, w, h, label, sub, ...d}); }
+const ic = (c) => 20 + c*130, ir = (r) => 70 + r*100;
+
+/* --- sources --- */
+[
+ ['src-pubmed','PubMed · NCBI E-utilities','search, efetch, CommentsCorrections','Searches (ingest add --search, autonima search), bibliographic metadata, retraction/erratum notices.'],
+ ['src-pmc','PMC S3 · Europe PMC · pubget','open-access JATS XML','Primary open-access full text. pubget is also autonima\'s fallback retriever.'],
+ ['src-els','Elsevier ScienceDirect','TDM API (Crossref prefix 78)','Downloaded and extracted by elsevier_coordinate_extraction.'],
+ ['src-spr','Springer OA · Wiley TDM','JATS / PDF (prefixes 297, 311)','Publisher routes gated by Crossref member prefix.'],
+ ['src-oa','OpenAlex · Semantic Scholar · Crossref','metadata, licences, OA PDFs','Metadata and licence facts; openAccessPdf candidates for the PDF extractor; neurostore\'s metadata outbox also uses PubMed and Semantic Scholar.'],
+ ['src-ace','ACE (HTML scraping)','publisher HTML → tables','Neurosynth\'s ACE; used by the ingestion download/extract stages and by autonima for local HTML.'],
+].forEach(([id,l,s,desc],i)=>chip(id,'sources',14,60+i*68,172,56,l,s,{desc, refs: id==='src-ace'?['ingestion_workflow/extractors/ace_extractor.py','autonima/retrieval/utils.py']:[]}));
+
+/* --- ingestion stages --- */
+const ING = 'ingestion_workflow/';
+chip('ing-download','ing',ic(0),ir(0),110,56,'download','first source that succeeds',{desc:'Tries download_sources in order until one returns a real article; paywall or abstract-only pages fail and fall through to the next source.',inputs:['catalog article (pmcid/pmid/doi aliases)'],outputs:['<cache_root>/<source>/… (article.xml, article.pdf, html)'],services:['PMC Cloud S3 + NCBI efetch','Europe PMC REST','pubget','Elsevier (elsevier_coordinate_extraction)','Springer OA JATS','Wiley TDM','ACE','OpenAlex / S2 openAccessPdf'],refs:[ING+'pipeline/stages/download.py',ING+'extractors/pdf_extractor.py']});
+chip('ing-extract','ing',ic(1),ir(0),110,56,'extract','text + tables per source',{desc:'Turns each download into text and tables, one artifact per source. All PDFs are read into a single “pdf” text using Docling for structure and PyPDFium for characters (OCR off).',inputs:['download'],outputs:['ExtractedContent, ExtractedTable'],services:['pubget code (pmc/europepmc/springer)','Elsevier extractor','ACE','Docling + PyPDFium'],refs:[ING+'pipeline/stages/extract.py',ING+'extractors/docling_convert.py']});
+chip('ing-metadata','ing',ic(2),ir(0),110,56,'metadata','bibliography + licences',{desc:'Bibliographic metadata plus a licence per held copy; records field digests.',inputs:['extract'],outputs:['ArticleMetadata, licences'],services:['Semantic Scholar','PubMed','Crossref (licences)','OpenAlex'],refs:[ING+'services/metadata.py',ING+'services/licenses.py']});
+chip('ing-triage','ing',ic(3),ir(0),110,56,'triage','is the table worth an LLM call?',{desc:'Per-table verdict, and flags meta-analyses. Only tables that pass go to the analyses stage.',inputs:['metadata, extracted tables'],outputs:['TableTriage'],services:['nspond_tables reader','fitted RoutedGate (coordinate_gate_path)'],refs:[ING+'pipeline/stages/triage.py']});
+chip('ing-analyses','ing',ic(4),ir(0),110,56,'analyses','table LLM → AnalysisCollection',{desc:'An LLM splits each passed table into analyses with coordinates: {table_id: AnalysisCollection}. Prompted path (default gpt-5-mini, forced function call parse_analyses, prompt vendored from autonima) or native NuExtract fine-tune on vLLM (llm_native_schema).',inputs:['triage (passed)'],outputs:['{table_id: AnalysisCollection}'],services:['OpenAI-compatible API','vLLM (NuExtract fine-tune, `ingest serve`)'],refs:[ING+'clients/coordinate_parsing.py',ING+'prompts/coordinate_parsing.py',ING+'services/create_analyses.py']});
+chip('ing-passages','ing',ic(1),ir(1),110,56,'passages','prose track · regex spans',{status:'impl',desc:'Prose track (runs only when prose_model is set). Regex detector finds up to 40 text spans that hold coordinates.',inputs:['extract'],outputs:['(start,end) passages'],refs:[ING+'pipeline/stages/passages.py',ING+'services/prose_passages.py']});
+chip('ing-prose','ing',ic(2),ir(1),110,56,'prose','nu-prose-v2 on vLLM',{desc:'Prose model reads each passage with title and abstract and returns analyses. Base NuExtract3 structured mode, prompt version 2026-10-11.nu-prose-v2.',inputs:['passages'],outputs:['prose analyses'],services:['vLLM (nu-prose-v2)'],refs:[ING+'clients/prose_coordinates.py',ING+'prompts/prose_coordinates.py']});
+chip('ing-resolve','ing',ic(3),ir(1),110,56,'resolve','merge prose + table',{desc:'Merges prose analyses with table analyses by matching nearby peaks.',inputs:['prose','analyses'],outputs:['merged analyses'],refs:[ING+'pipeline/stages/resolve.py']});
+chip('ing-roles','ing',ic(4),ir(1),110,56,'roles','result · anchor · localization …',{desc:'Assigns each coordinate set a role (study_schema CoordinateRole: result, anchor, localization, reference, other; AnchorKind) with a probability. Without role models the article is blocked here and nothing uploads.',inputs:['resolve (or analyses without prose)'],outputs:['roles + probabilities'],services:['NuExtract3 role fine-tunes on vLLM (role_model_table, role_model_prose)'],refs:[ING+'services/set_roles/',ING+'pipeline/stages/roles.py']});
+chip('ing-space','ing',ic(2),ir(2),110,56,'space','MNI / TAL from context',{desc:'Fills an unknown coordinate space from caption, footer, Methods or Results.',inputs:['roles'],outputs:['coordinate_space'],refs:[ING+'services/coordinate_space.py',ING+'pipeline/stages/space.py']});
+chip('ing-sync','ing',ic(3),ir(2),110,56,'sync','C2 + C3 → ns-pond tree',{desc:'Converts analyses to study_schema CoordinateParse (C3, analyses keyed by keys.analysis_key, citing cells and text spans) and ParsedPaper (C2: text, tables, bibliography, licences) and writes the ns-pond tree.',inputs:['space','notices'],outputs:['parse/parsed_paper.json','parse/coordinate_parse.json','processed/*, stage1/analyses.json'],refs:[ING+'pipeline/stages/sync.py',ING+'services/paper_parse.py']});
+chip('ing-upload','ing',ic(4),ir(2),110,56,'upload','POST study-schema-uploads',{desc:'Validates (pydantic, layouts.check_paper, study_schema JSON Schema) and POSTs {coordinate_parse, parsed_paper} as an admin. The returned base_study_id is learned back into the catalog as a neurostore alias. KEY_MISMATCH / DUPLICATE_KEY are recorded as permanent.',inputs:['sync'],outputs:['<study>/upload/neurostore_ingest.json'],services:['neurostore API (Bearer $NEUROSTORE_TOKEN)'],refs:[ING+'services/neurostore_ingest.py',ING+'pipeline/stages/upload.py']});
+chip('ing-add','ing',ic(0),ir(1),110,56,'ingest add','ids · search · neurostore',{desc:'Registers articles: explicit ids, a file or manifest, a literature search (PubMed, Semantic Scholar, OpenAlex, ScienceDirect), local PDFs, or --from-neurostore, which reads neurostore\'s Postgres directly (SSH tunnel) for group-level base studies in a studyset that have no study_schema Study.',services:['PubMed, S2, OpenAlex, ScienceDirect search','neurostore Postgres (read-only)'],refs:[ING+'cli/main.py',ING+'services/search.py',ING+'services/discover.py',ING+'services/db.py']});
+chip('ing-catalog','ing',ic(0),ir(2),110,56,'catalog','sqlite + blob store',{desc:'Every stage writes an artifacts row (article, stage, source, status, fingerprint, blob). Payloads are gzipped JSON in a content-addressed blob store; fingerprints chain to upstream ones, so a run only recomputes what changed. Article ids are 12-char base32; aliases pmcid > pmid > doi > neurostore.',refs:[ING+'catalog/schema.py',ING+'catalog/blobs.py',ING+'catalog/fingerprint.py']});
+chip('ing-reflist','ing',ic(0),ir(3),110,56,'reflist','opt-in · Crossref refs',{desc:'Opt-in (only when named with --stage). Crossref reference list. Nothing downstream reads it yet.',services:['Crossref','OpenAlex'],refs:[ING+'pipeline/stages/reflist.py']});
+chip('ing-references','ing',ic(1),ir(3),110,56,'references','opt-in · in-text citations',{desc:'Opt-in. Reference list plus in-text citations with offsets, from source markup; no network.',refs:[ING+'pipeline/stages/references.py']});
+chip('ing-notices','ing',ic(2),ir(3),110,56,'notices','retractions · errata',{desc:'Retraction and erratum notices; only sync reads them (they become bibliography.corrections, and neurostore sets is_retracted).',services:['PubMed CommentsCorrections','OpenAlex is_retracted'],refs:[ING+'pipeline/stages/notices.py']});
+
+/* --- pondie stages --- */
+const PD='pondie/';
+chip('pd-corpus','pondie',ic(0),ir(0)-6,110,56,'corpus sync','rsync from ns-pond',{desc:'Copies identifiers.json, processed/* and source/* from the ns-pond tree on beast into data/corpus/<study_id>/. The WANTED list does not include parse/, so C2/C3 have to arrive another way.',inputs:['ns-pond tree'],outputs:['data/corpus/<study_id>/'],refs:[PD+'extraction/corpus/sync.py',PD+'paths.py']});
+chip('pd-tables','pondie',ic(1),ir(0)-6,110,56,'tables','mint Table local_ids',{desc:'No model. Mints Table local_ids and copies caption/footer from the manifest or the parse.',inputs:['parse/parsed_paper.json (C2) or manifest'],refs:[PD+'extraction/stages.py']});
+chip('pd-split','pondie',ic(2),ir(0)-6,110,56,'split','SignSplit two-signed',{desc:'No model. Splits a two-signed parse analysis into halves and withholds the reversed half. Reads parse/coordinate_parse.json (C3) when present (keys checked with study_schema.keys.key_for), else legacy stage1/analyses.json.',inputs:['C3 CoordinateParse'],refs:[PD+'extraction/sign_split.py',PD+'formats/coordinate_parse.py']});
+chip('pd-single','pondie',ic(3),ir(0)-6,110,56,'single','whole record, 1 LLM call',{desc:'One LLM call fills the whole record; retried with named faults. Optional --recheck-results; complete_references on by default. demands → satisfy is the older two-call alternative.',services:['OpenAI SDK → Portkey gateway (reasoning_effort medium, service_tier flex)','or codex exec --output-schema'],refs:[PD+'extraction/llm.py',PD+'extraction/prompt/']});
+chip('pd-fill','pondie',ic(4),ir(0)-6,110,56,'fill','open slots ≤3 rounds',{desc:'LLM loop over still-open slots (at most 3 rounds of 250 slots).',services:['LLM (effort low)'],refs:[PD+'extraction/stages.py']});
+chip('pd-evidence','pondie',ic(4),ir(1)-10,110,56,'evidence','quote per value',{desc:'Adds a supporting quote for each value that lacks one (quotes or indexed format).',services:['LLM (effort low)'],refs:[PD+'extraction/evidence/']});
+chip('pd-build','pondie',ic(3),ir(1)-10,110,56,'build','merge · fix · validate',{desc:'No model. Merges payloads, applies record/fix/*, resolves quotes to character offsets, validates against the extraction LinkML, writes records/<id>.extraction.json.',outputs:['data/runs/<run>/records/<id>.extraction.json'],refs:[PD+'extraction/record/']});
+chip('pd-repair','pondie',ic(2),ir(1)-10,110,56,'repair','propose links · guard',{desc:'LLM proposes missing entities and links over 2 iterations; repair/guard.py vetoes bad edits; one adjudicate call settles scope/region contradictions.',refs:[PD+'extraction/repair/']});
+chip('pd-normalize','pondie',ic(1),ir(1)-10,110,56,'normalize','ONVOC · MONDO · CogAt',{desc:'One module per field. Writes is_healthy, age_unit_normalized, category_normalized and other_characteristics onto the record. Uses SapBERT and MiniLM embeddings against ONVOC, MONDO and Cognitive Atlas vocabularies.',services:['SapBERT, all-MiniLM-L6-v2','spaCy, NLTK wordnet'],refs:[PD+'normalization/',PD+'vocabularies/fetch.py']});
+chip('pd-select','pondie',ic(0),ir(1)-10,110,56,'select','query → NIMADS Studyset',{desc:'Queries records (measure type, contrast, ROI) and returns a nimare.nimads.Studyset in-process. Not connected to neurostore.',outputs:['nimare Studyset'],refs:[PD+'query/engine.py (Result.to_studyset)']});
+
+/* --- neurostore internals --- */
+const NS_='store/backend/neurostore/';
+[
+ ['ns-uploads','/study-schema-uploads/','parse · parse_and_record · record · revision','impl','One atomic transaction per upload. Finds/creates the BaseStudy by doi/pmid/pmcid, writes a pipeline-owned Study (source="study_schema"), keys analyses by content key (analysis#<16hex>) in Analysis.source_id, keeps every parse as a PipelineStudyResult of pipeline "coordinate-parse" and records (pipeline "pondie") as StudyEntity/FieldClaim rows. run_id makes replays idempotent. Errors: KEY_MISMATCH, NOT_CURRENT, RUN_ID_REUSED, STALE_ENTITY_HASHES.',[NS_+'resources/study_schema_uploads.py',NS_+'ingest/study_schema.py','neurostore-spec/neurostore-openapi.yml:269']],
+ ['ns-filter','/base-studies/ · /pipeline-study-results/','feature_filter · semantic_search · x/y/z radius','impl','Filtering by extracted metadata: feature_filter="Pipeline[:version]:field.path=value" (with [], ~ regex and comparisons), pgvector semantic_search with distance_threshold, coordinate radius, year range. Annotations can import pipeline feature columns into notes.',[NS_+'resources/pipeline.py','neurostore-spec/neurostore-openapi.yml:336-375, 1487-1600, 4348']],
+ ['ns-nimads','/studysets/ · /annotations/ · /analyses/','NIMADS-shaped CRUD','impl','User-facing studies, analyses, points, images, conditions, studysets and annotations. Responses follow the NIMADS base schemas referenced from neurostore-spec.',[NS_+'resources/','neurostore-spec/neurostore-openapi.yml']],
+ ['ns-releases','/neurostore-studyset-releases/','nightly NIMADS parquet','impl','Downloadable whole-database studyset built by the release worker. Exports analyses with role == "result". compose-runner uses the nightly release as the "neurostore" reference studyset.',[NS_+'services/neurostore_studyset_releases.py']],
+ ['ns-review','/review/* · /imports/pipeline','review API (draft PR #110)','spec','Reviewer workflow: sources, bundles, review sessions with atomic op batches (client_op_id), exports as study_schema layout zips, assignments, reviewers, imports. Present only in neurostore-spec main; neurostore main pins an older spec and has no /review code.',['neurostore-spec/neurostore-openapi.yml:1868-2640']],
+].forEach(([id,l,s,st,desc,refs],i)=>chip(id,'store',20,64+i*96,230,82,l,s,{status:st,desc,refs,mono:true}));
+[
+ ['ns-db-bib','BaseStudy → Study','paper · versions · is_retracted','The paper (doi/pmid/pmcid, metadata, has_* flags, is_retracted) and its versions; source="study_schema" marks the pipeline-owned version.',[NS_+'models/data.py:197, 506']],
+ ['ns-db-nimads','Studyset · Annotation · Analysis · Point','NIMADS store','Studysets (N:M studies), annotations with per-analysis notes, analyses with points, images, conditions and entities.',[NS_+'models/data.py:77-967']],
+ ['ns-db-pipe','Pipeline → Config → Results','feature store for filters','Pipeline, PipelineConfig (version, schema, config_hash), PipelineStudyResult (result_data JSONB per base study), PipelineAnalysisResult, PipelineEmbedding (pgvector).',[NS_+'models/data.py:983-1094']],
+ ['ns-db-claims','StudyEntity → FieldClaim','study_schema claim layer','Each storage-schema entity becomes a StudyEntity (entity_class, entity_hash "study-entity/3", parent tree); every field value is a FieldClaim (field_path, value, origin, origin_user) with FieldClaimEvidence spans. Human and machine claims share one table.',[NS_+'models/data.py:1193-1371']],
+ ['ns-w-flag','flag outbox worker','has_coordinates · has_images','Recomputes has_coordinates / has_images from base_study_flag_outbox.',['store/docker-compose.yml']],
+ ['ns-w-meta','metadata outbox worker','PubMed · PMC idconv · S2','Fills missing DOI/PMID/PMCID and metadata.',[NS_+'services/base_study_metadata_enrichment.py']],
+ ['ns-w-release','release worker','nightly / monthly build','build-neurostore-studyset-release --nightly --monthly-if-due.',[NS_+'services/neurostore_studyset_releases.py']],
+].forEach(([id,l,s,desc,refs],i)=>chip(id,'store',270,64+i*66,230,56,l,s,{desc,refs}));
+
+/* --- compose internals --- */
+const CP='compose/backend/neurosynth_compose/';
+const cc=(c)=>20+c*125;
+chip('cp-project','compose',cc(0),64,110,56,'Project','CBMA or IBMA',{desc:'Project row (type CBMA/IBMA, draft). Curation and extraction state live in Project.provenance JSON.',refs:[CP+'models/analysis.py:364']});
+chip('cp-curation','compose',cc(1),64,110,56,'Curation','import · screen · PRISMA',{desc:'Import from NEUROSTORE / PUBMED / FILE / SLEUTH / MANUAL; columns, stubs, exclusion and info tags, PRISMA config in provenance.curationMetadata.',refs:['compose/neurosynth-frontend/src/pages/Curation/Curation.types.ts']});
+chip('cp-extraction','compose',cc(2),64,110,56,'Extraction','studyset + annotation',{desc:'Creates a neurostore Studyset and Annotation (frontend, via the neurostore SDK). provenance.extractionMetadata = {studysetId, annotationId, studyStatusList}. StudysetStudy.curation_stub_uuid links studies to curation stubs.',refs:['compose/neurosynth-frontend/src/pages/Extraction']});
+chip('cp-spec','compose',cc(3),64,110,56,'Meta-analysis','estimator · corrector · filter',{desc:'Specification (type, estimator JSON, corrector JSON, filter = annotation column, conditions with weights, database_studyset) plus SnapshotStudyset / SnapshotAnnotation.',refs:[CP+'models/analysis.py:129, 214']});
+chip('cp-run','compose',cc(3),160,110,56,'Run job','POST /meta-analysis-jobs',{desc:'call_lambda(COMPOSE_RUNNER_SUBMIT_URL, {meta_analysis_id, environment, no_upload}); job state cached in Redis; status, logs and artifacts from their own Lambda URLs.',refs:[CP+'resources/data_views/meta_analysis_jobs_view.py:224-300',CP+'config.py:101-104']});
+chip('cp-results','compose',cc(2),160,110,56,'Results','MetaAnalysisResult',{desc:'Receives PUT /meta-analysis-results/{id} from compose-runner (authenticated by MetaAnalysis.run_key): maps, cluster and diagnostic tables, method description and references.',refs:[CP+'models/analysis.py:267']});
+chip('cp-worker','compose',cc(1),160,110,56,'Celery worker','NeuroVault · write-back',{desc:'group(file_upload_neurovault…) | create_or_update_neurostore_analysis: uploads maps to NeuroVault and writes the result back into neurostore as an analysis (Auth0 client credentials).',refs:[CP+'resources/tasks.py',CP+'resources/data_views/meta_analyses_view.py:890-933']});
+chip('cp-front','compose',cc(0),160,110,56,'Frontend','React · Vite · SDKs',{desc:'Single web app for both services, using neurostore-typescript-sdk and neurosynth-compose-typescript-sdk.',refs:['compose/neurosynth-frontend/']});
+chip('cp-db','compose',20,250,480,48,'compose Postgres','Project · MetaAnalysis · Specification · Snapshots · Results · NeurovaultCollection',{desc:'See the Data schemas view for the entity model.',refs:[CP+'models/analysis.py']});
+
+/* --- compose-runner steps --- */
+const CR='compose_runner/';
+[
+ ['cr-submit','Submit Lambda','validate · size the task','Function URL; fetches the meta-analysis to choose task size, starts the state machine, returns job_id + artifact_prefix.',[CR+'aws_lambda/run_handler.py']],
+ ['cr-sfn','Step Functions','cost check → pick size','CheckMonthlyCost → EnforceMonthlyCostLimit → SelectFargateTask (large 16 vCPU when FWECorrector montecarlo; default 4 vCPU / 30 GiB).',['infra/cdk/stacks/compose_runner_stack.py',CR+'aws_lambda/cost_check_handler.py']],
+ ['cr-ecs','ECS Fargate task','compose_runner.ecs_task','Reads META_ANALYSIS_ID, ENVIRONMENT, NSC_KEY…, runs run(), uploads files to S3 with metadata.json.',[CR+'ecs_task.py']],
+ ['cr-download','download_bundle','spec from compose, data from neurostore','Meta-analysis (nested) from compose; live studyset + annotation from neurostore (falls back to compose snapshots); run_key.',[CR+'run.py:505']],
+ ['cr-process','process_bundle','spec → NiMARE objects','Imports nimare.meta.<type>.<estimator> and nimare.correct.<corrector>; fills sample sizes; builds nimare.nimads.Studyset; apply_filter on an annotation column; optional reference database_studyset (neurosynth / neuroquery dumps, or neurostore nightly parquet).',[CR+'run.py:791',CR+'metadata.py']],
+ ['cr-run','run_meta_analysis','CBMA · Pairwise · IBMA workflow','CBMAWorkflow / PairwiseCBMAWorkflow (focuscounter) or IBMAWorkflow (jackknife + ibma_coverage.tsv); pickles meta_results.pkl.',[CR+'run.py:991',CR+'coverage.py']],
+ ['cr-result','create_result_object','POST meta-analysis-results','ResultInit with cli_version and snapshot studyset/annotation (deduplicated by md5).',[CR+'run.py:950']],
+ ['cr-upload','upload_results','PUT maps + tables','Multipart PUT /meta-analysis-results/{id}: statistical_maps, cluster_tables, diagnostic_tables, method_description, method_references.',[CR+'run.py:1038']],
+ ['cr-s3','S3 · status · logs · results','presigned artifacts','Status (DescribeExecution + S3 metadata), LogPoller (CloudWatch), ResultsFetcher (presigned URLs) Lambdas.',[CR+'aws_lambda/']],
+].forEach(([id,l,s,desc,refs],i)=>chip(id,'runner',20,60+i*54,260,44,l,s,{desc,refs,row:true}));
+
+/* --- NiMARE subsystems --- */
+const NM='nimare/';
+[
+ ['nm-io','io · extract','fetch_neurostore_studyset · Sleuth · releases','fetch_neurostore_studyset(studyset_id, annotation_id), fetch_neurostore_releases (parquet), convert_sleuth_to_studyset, convert_neurosynth_to_studyset, NeuroVault converters.',[NM+'io.py:295',NM+'extract/extract.py']],
+ ['nm-studyset','Studyset','columnar NIMADS · slice · filter','Canonical input: from_nimads, from_parquet, slice, filter_annotations, merge, to_nimads/to_parquet. Dataset is deprecated since 0.21.0 (to_dataset kept).',[NM+'studyset/studyset.py:48',NM+'dataset.py']],
+ ['nm-kernel','Kernels','ALE · KDA · MKDA','ALEKernel, KDAKernel, MKDAKernel.',[NM+'meta/kernel.py']],
+ ['nm-cbma','CBMA estimators','ALE · SCALE · MKDA · KDA · CBMR','ALE, ALESubtraction, SCALE, MKDADensity, MKDAChi2, KDA; CBMR (torch).',[NM+'meta/cbma/',NM+'meta/cbmr/']],
+ ['nm-ibma','IBMA estimators','Stouffers · DerSimonianLaird …','Fishers, Stouffers, WeightedLeastSquares, DerSimonianLaird, Hedges, SampleSize/VarianceBasedLikelihood, PermutedOLS.',[NM+'meta/ibma.py']],
+ ['nm-correct','Correctors','FWE montecarlo · FDR · Bonferroni','FWECorrector (montecarlo dispatched to the estimator) and FDRCorrector (indep, negcorr).',[NM+'correct.py:361, 452']],
+ ['nm-workflow','Workflows','CBMA · PairwiseCBMA · IBMA','Workflow.fit: estimator → corrector → diagnostics → save maps/tables, boilerplate.txt, references.bib.',[NM+'workflows/base.py:248']],
+ ['nm-diag','Diagnostics','Jackknife · FocusCounter','Jackknife, FocusCounter, ResampledStability, FocusFilter.',[NM+'diagnostics.py']],
+ ['nm-results','MetaResult · reports','maps · tables · HTML report','MetaResult (maps, tables, description_, bibtex_) and run_reports.',[NM+'results.py:131',NM+'reports/base.py:701']],
+ ['nm-decode','annotate · decode','LDA · GCLDA · decoders','Side branch: topic models and functional decoding.',[NM+'annotate/',NM+'decode/']],
+].forEach(([id,l,s,desc,refs],i)=>chip(id,'nimare',20,60+i*50,260,42,l,s,{desc,refs,row:true}));
+
+/* --- autonima stages --- */
+const AU='autonima/';
+const ac=(i)=>20+i*142;
+[
+ ['au-search','search','PubMed query or PMID list','NCBI Entrez E-utilities, or search.pmids_file / pmids_list. PMCIDs via PMC idconv.',[AU+'search/pubmed.py']],
+ ['au-abstract','abstract','LLM screen vs criteria','Screens each record against screening.abstract inclusion/exclusion criteria; skip_stage passes all.',[AU+'screening/screener.py']],
+ ['au-retrieval','retrieval','records → local → pubget','records (document sources, #85) → full_text_sources (local corpora; ACE on HTML; processed_data_path coordinates) → pubget for the rest. Missing text marks a record unavailable.',[AU+'pipeline.py:547-851',AU+'documents/attach.py',AU+'retrieval/pubget.py']],
+ ['au-fulltext','fulltext','LLM screen full text','Screens against screening.fulltext criteria.',[AU+'pipeline.py']],
+ ['au-parsing','parsing','LLM table → analyses','Only with parsing.parse_coordinates: heuristics pick tables, the LLM splits them into analyses. Skipped when analyses arrive with the source.',[AU+'coordinates/parser.py']],
+ ['au-annotation','annotation','analysis × criteria matrix','LLM judges each analysis against each annotations[] target (single_analysis or multi_analysis prompts).',[AU+'annotation/processor.py']],
+ ['au-output','output','NIMADS studyset + annotation','JSON/CSV, PRISMA, missing full-text reports; nimads_studyset.json and nimads_annotation.json from autonima\'s own NIMADS dataclasses.',[AU+'pipeline.py:1533',AU+'coordinates/nimads_models.py']],
+ ['au-meta','autonima meta','CBMAWorkflow per column','Separate command: Studyset.slice per boolean annotation column → to_dataset() → CBMAWorkflow (mkdadensity default, fdr default, focuscounter) → run_reports.',[AU+'meta.py',AU+'cli.py:609']],
+].forEach(([id,l,s,desc,refs],i)=>chip(id,'autonima',ac(i),64,128,62,l,s,{desc,refs}));
+chip('au-llm','autonima',20,150,270,50,'LLM client','openai SDK · any OpenAI-compatible gateway',{desc:'OPENAI_API_GATEWAY / AUTONIMA_MODEL_PREFIX; defaults gpt-4 (screening) and gpt-4o-mini (parsing, annotation); README uses gpt-5-mini. Token cost tracked per stage.',refs:[AU+'llm/client.py',AU+'llm/usage.py']});
+chip('au-records','autonima',304,150,270,50,'document sources (#85)','<pmid>.md · <pmid>.analyses.json',{desc:'retrieval.records {kind: text | analyses, root}. Any external tool can write this layout (the natural door for ns-pond full text and coordinates); nothing in autonima names ns-pond or pondie yet.',refs:[AU+'documents/folder.py',AU+'models/types.py:360','docs/guides/records.md']});
+chip('au-ui','autonima',588,150,270,50,'CLI + web UI','run · validate · meta · ui',{desc:'CLI commands run, run-search, run-abstract, validate, meta, create-sample-config, ui; web UI with run manager launching meta as a subprocess.',refs:[AU+'cli.py',AU+'webui/runs.py:256']});
+chip('au-out','autonima',872,150,270,50,'outputs/','final_results.json · nimads_*.json',{desc:'search_results, screening results, coordinate_parsing_results, criteria_mapping, missing_fulltexts, nimads_studyset.json, nimads_annotation.json; meta_analysis_results/<column>/.',refs:['docs/guides/outputs.md']});
+
+/* --- contracts --- */
+const SS='study_schema/src/study_schema/';
+[
+ ['k-c2','C2 ParsedPaper','study_schema paper-parse v0.8.0','Text, tables, bibliography, licences, references. Produced by ingestion sync; read by pondie and neurostore uploads.',[SS+'linkml/','study_schema/README.md'],['ing-sync','ing-upload','nspond','pd-tables','ns-uploads']],
+ ['k-c3','C3 CoordinateParse','analyses keyed analysis#<sha>','Analyses with cells, text spans, roles and points. Produced by ingestion; pondie revision planned; stored by neurostore as a coordinate-parse pipeline result.',[SS+'models/paper_parse.py',SS+'keys.py'],['ing-sync','ing-upload','ing-roles','nspond','pd-split','ns-uploads','ns-db-pipe']],
+ ['k-ext','Extraction record','extraction Study v0.6.0','Storage Study with every scalar wrapped in ExtractedValue{value, evidence}. Produced by pondie; accepted by uploads (record kind). The extraction→storage mapper exists only as a spec.',[SS+'models/extraction.py','extraction-to-storage.map.yaml'],['pd-build','pd-repair','pd-normalize','ns-uploads','ns-db-claims']],
+ ['k-storage','Storage Study','study_schema storage v0.9.0','Source-of-truth study model: groups, tasks, acquisitions, models, effects, analyses. neurostore stores it as StudyEntity + FieldClaim rows.',[SS+'models/storage.py','analysis-entities.md'],['ns-db-claims','ns-uploads','ns-review']],
+ ['k-nimads','NIMADS','Studyset · Annotation JSON Schema','Meta-analysis interchange: studyset → study → analysis → point/image; annotations with notes per analysis.',['NIMADS/nimads/*.yaml'],['ns-nimads','ns-releases','ns-db-nimads','cp-extraction','cp-spec','cr-download','cr-process','nm-io','nm-studyset','au-output','au-meta','pd-select']],
+ ['k-spec','neurostore-spec','OpenAPI · SDK generation','neurostore-openapi.yml references NIMADS *Base.yaml and documents study-schema-uploads and the draft review API. Pushes regenerate the Python/TS SDKs.',['neurostore-spec/neurostore-openapi.yml','neurostore-spec/README.md'],['ns-uploads','ns-filter','ns-nimads','ns-review','cp-front','cr-download']],
+].forEach(([id,l,s,desc,refs,users],i)=>chip(id,'contracts',14,60+i*62,172,52,l,s,{desc,refs,users,isContract:true}));
+
+/* ----------------------------------------------------------------------------
+   SYSTEM EDGES
+   a/b: [nodeId, side, t]  side: l r t b ; via: explicit waypoints
+---------------------------------------------------------------------------- */
+const EDGES = [
+ // internal ingestion flow
+ {id:'i1',a:['ing-add','t'],b:['ing-download','b'],st:'impl',internal:1},
+ {id:'i2',a:['ing-download','r'],b:['ing-extract','l'],st:'impl',internal:1},
+ {id:'i3',a:['ing-extract','r'],b:['ing-metadata','l'],st:'impl',internal:1},
+ {id:'i4',a:['ing-metadata','r'],b:['ing-triage','l'],st:'impl',internal:1},
+ {id:'i5',a:['ing-triage','r'],b:['ing-analyses','l'],st:'impl',internal:1},
+ {id:'i6',a:['ing-extract','b'],b:['ing-passages','t'],st:'impl',internal:1},
+ {id:'i7',a:['ing-passages','r'],b:['ing-prose','l'],st:'impl',internal:1},
+ {id:'i8',a:['ing-prose','r'],b:['ing-resolve','l'],st:'impl',internal:1},
+ {id:'i9',a:['ing-analyses','b',.3],b:['ing-resolve','t',.7],st:'impl',internal:1},
+ {id:'i10',a:['ing-resolve','r'],b:['ing-roles','l'],st:'impl',internal:1},
+ {id:'i11',a:['ing-roles','b'],b:['ing-space','t'],st:'impl',internal:1,via:[[855,346],[595,346]]},
+ {id:'i12',a:['ing-space','r'],b:['ing-sync','l'],st:'impl',internal:1},
+ {id:'i13',a:['ing-sync','r'],b:['ing-upload','l'],st:'impl',internal:1},
+ {id:'i14',a:['ing-notices','r'],b:['ing-sync','b',.3],st:'impl',internal:1},
+ // internal pondie flow
+ ...[['pd-corpus','pd-tables'],['pd-tables','pd-split'],['pd-split','pd-single'],['pd-single','pd-fill']].map(([a,b],i)=>({id:'p'+i,a:[a,'r'],b:[b,'l'],st:'impl',internal:1})),
+ {id:'p5',a:['pd-fill','b'],b:['pd-evidence','t'],st:'impl',internal:1},
+ ...[['pd-evidence','pd-build'],['pd-build','pd-repair'],['pd-repair','pd-normalize'],['pd-normalize','pd-select']].map(([a,b],i)=>({id:'pq'+i,a:[a,'l'],b:[b,'r'],st:'impl',internal:1})),
+ // compose internal
+ ...[['cp-project','cp-curation'],['cp-curation','cp-extraction'],['cp-extraction','cp-spec']].map(([a,b],i)=>({id:'c'+i,a:[a,'r'],b:[b,'l'],st:'impl',internal:1})),
+ {id:'c3',a:['cp-spec','b'],b:['cp-run','t'],st:'impl',internal:1},
+ {id:'c4',a:['cp-results','l'],b:['cp-worker','r'],st:'impl',internal:1},
+ // runner internal
+ ...['cr-submit','cr-sfn','cr-ecs','cr-download','cr-process','cr-run','cr-result','cr-upload'].map((a,i,arr)=>({id:'r'+i,a:[a,'b'],b:[['cr-sfn','cr-ecs','cr-download','cr-process','cr-run','cr-result','cr-upload','cr-s3'][i],'t'],st:'impl',internal:1})),
+ // nimare internal
+ ...['nm-io','nm-studyset','nm-kernel','nm-cbma','nm-ibma','nm-correct','nm-workflow','nm-diag'].map((a,i)=>({id:'n'+i,a:[a,'b'],b:[['nm-studyset','nm-kernel','nm-cbma','nm-ibma','nm-correct','nm-workflow','nm-diag','nm-results'][i],'t'],st:'impl',internal:1})),
+ // autonima internal
+ ...['au-search','au-abstract','au-retrieval','au-fulltext','au-parsing','au-annotation','au-output'].map((a,i)=>({id:'a'+i,a:[a,'r'],b:[['au-abstract','au-retrieval','au-fulltext','au-parsing','au-annotation','au-output','au-meta'][i],'l'],st:'impl',internal:1})),
+ {id:'a9',a:['au-records','t'],b:['au-retrieval','b'],st:'impl',internal:1},
+ // neurostore internal
+ {id:'s1',a:['ns-uploads','r'],b:['ns-db-claims','l'],st:'impl',internal:1},
+ {id:'s2',a:['ns-uploads','r',.7],b:['ns-db-pipe','l'],st:'impl',internal:1},
+ {id:'s3',a:['ns-db-pipe','l',.7],b:['ns-filter','r'],st:'impl',internal:1},
+ {id:'s4',a:['ns-w-release','l'],b:['ns-releases','r'],st:'impl',internal:1},
+
+ // --- cross-application hand-offs ---
+ {id:'E1',a:['sources','r',.25],b:['ing-download','l'],st:'impl',label:'articles · metadata',desc:'Download stage pulls full text from PMC/Europe PMC, publishers and OA PDFs; metadata stage queries Semantic Scholar, PubMed, Crossref, OpenAlex.'},
+ {id:'E2',a:['ing-upload','r'],b:['ns-uploads','l',.45],st:'impl',label:'C2 + C3 (kind=parse)',desc:'POST /api/study-schema-uploads/ with {coordinate_parse, parsed_paper}; admin Bearer token; returns base_study_id.',refs:['ingestion_workflow/services/neurostore_ingest.py','store/backend/neurostore/resources/study_schema_uploads.py']},
+ {id:'E3',a:['ing-sync','b'],b:['nspond','t',.85],st:'impl',label:'writes tree',desc:'sync writes processed/*, stage1/analyses.json and parse/{parsed_paper,coordinate_parse}.json under <ns_pond_root>/<base_study_id>/.'},
+ {id:'E4',a:['nspond','b',.15],b:['pd-corpus','t'],st:'impl',label:'rsync processed/*',lt:.3,desc:'pondie corpus sync copies identifiers.json, processed/* and source/* from beast. parse/ is not in its WANTED list, so C2/C3 are only read if placed there another way.',refs:['pondie/extraction/corpus/sync.py']},
+ {id:'E5',a:['pondie','r',.15],b:['ns-uploads','l',.8],st:'plan',label:'record / C3 revision',lt:.25,via:[[995,799],[995,281]],desc:'neurostore already accepts record, parse_and_record and revision uploads (pipeline "pondie", schema "neuroimaging-study-extraction"). pondie has no neurostore client, does not write C3 revisions yet, and the extraction→storage mapper (“the ingester”) exists only as extraction-to-storage.map.yaml.',refs:['store/backend/neurostore/ingest/study_schema.py:104','study_schema/extraction-to-storage.map.yaml']},
+ {id:'E6',a:['store','l',.83],b:['ing','r',.88],st:'impl',label:'--from-neurostore (DB read)',desc:'ingest add --from-neurostore reads neurostore Postgres directly over an SSH tunnel: group-level base studies in a studyset with no study_schema Study. It is a pull, not an event.',refs:['ingestion_workflow/services/discover.py','ingestion_workflow/config/__init__.py:643-715']},
+ {id:'E7',a:['store','l',.73],b:['ing','r',.78],st:'plan',label:'user uploads → extraction',desc:'Intended: when people upload studies directly to neurostore, neurostore sends them to the extraction pipeline. No webhook, queue or outbox for this exists in neurostore today; the closest mechanism is the outbox-worker pattern already used for flags and metadata.'},
+ {id:'E8',a:['user','b',.3],b:['store','t',.47],st:'impl',label:'upload & edit studies',desc:'Users create/edit studies, analyses and points through the neurostore API (frontend).'},
+ {id:'E9',a:['user','r'],b:['compose','t',.92],st:'impl',label:'curate · specify · run',via:[[1645,65],[1645,750],[1538,750]],desc:'Projects, curation, extraction, meta-analysis specification and run from the neurosynth-compose frontend.'},
+ {id:'E10',a:['compose','t',.62],b:['store','b',.62],st:'impl',label:'create studyset + annotation',desc:'Extraction step creates the neurostore Studyset and Annotation; their ids are stored in Project.provenance and StudysetReference/AnnotationReference.'},
+ {id:'E11',a:['compose','t',.13],b:['store','b',.13],st:'impl',label:'result → neurostore analysis',desc:'Celery task create_or_update_neurostore_analysis writes the meta-analysis result back into neurostore (status in NeurostoreAnalysis).',refs:['compose/backend/neurosynth_compose/resources/tasks.py']},
+ {id:'E12',a:['cp-run','r'],b:['cr-submit','l'],st:'impl',label:'Lambda submit',desc:'compose POST /meta-analysis-jobs → call_lambda(COMPOSE_RUNNER_SUBMIT_URL).'},
+ {id:'E13',a:['cr-download','l'],b:['store','r',.88],st:'impl',label:'GET studyset + annotation',via:[[1615,1024],[1615,643]],desc:'download_bundle fetches the live studyset and annotation from neurostore (StoreApi) and, if needed, the nightly release parquet as a reference studyset.'},
+ {id:'E14',a:['cr-download','l',.25],b:['compose','r',.3],st:'impl',label:'GET meta-analysis',desc:'ComposeApi.meta_analyses_id_get(nested=True): specification, snapshots, run_key.'},
+ {id:'E15',a:['cr-upload','l'],b:['compose','r',.8],st:'impl',label:'PUT results',desc:'PUT /meta-analysis-results/{id}: statistical maps, cluster tables, diagnostics, method description and references.'},
+ {id:'E16',a:['runner','t',.5],b:['nimare','b',.5],st:'impl',label:'nimare 0.22.0',desc:'process_bundle + run_meta_analysis build a nimare.nimads.Studyset and run CBMA / Pairwise / IBMA workflows in-process.'},
+ {id:'E17',a:['cp-worker','b'],b:['nv','t',.3],st:'impl',label:'upload maps',via:[[1260,1124],[1524,1124]],desc:'Celery neurovault.upload; files tracked as NeurovaultFile.'},
+ {id:'E18',a:['store','r',.27],b:['nm-io','l'],st:'impl',label:'fetch_neurostore_studyset',desc:'NiMARE can also pull a studyset + annotation, or the parquet releases, straight from neurostore.',refs:['nimare/io.py:295','nimare/extract/extract.py']},
+ {id:'E19',a:['sources','b',.95],b:['autonima','l',.5],st:'impl',label:'PubMed · pubget',lt:.82,via:[[210,640],[240,640],[240,1220]],desc:'autonima searches PubMed and downloads PMC open access with pubget.'},
+ {id:'E20',a:['nspond','r',.3],b:['autonima','t',.61],st:'plan',label:'full text (records layout)',via:[[975,674],[975,1110]],desc:'Intended: autonima takes full text from ns-pond-ingestion-workflow. Today there is no adapter; the natural door is autonima\'s document sources (retrieval.records, kind text or analyses) or full_text_sources layouts.'},
+ {id:'E21',a:['store','l',.95],b:['autonima','t',.66],st:'plan',label:'coordinates from neurostore',via:[[1025,682],[1025,1110]],desc:'Intended: autonima takes coordinates from neurostore. Not implemented; autonima gets coordinates from pubget, ACE, CSVs, records with analyses, or its own LLM parsing.'},
+ {id:'E22',a:['autonima','t',.835],b:['store','b',.01],st:'plan',label:'upload results',via:[[1245,1110],[1245,1100],[1048,1100],[1048,700]],desc:'Intended: autonima results (annotations, inclusion matrix, meta-analysis) go back to neurostore. Not implemented or planned in the autonima repo.'},
+ {id:'E23',a:['au-meta','r'],b:['nimare','l',.93],st:'impl',label:'NIMADS JSON → CBMAWorkflow',via:[[1440,1158],[1440,1100],[1663,1100],[1663,680]],desc:'autonima meta loads its own nimads_studyset.json / nimads_annotation.json into nimare.nimads.Studyset and runs CBMAWorkflow locally.'},
+];
+
+/* ----------------------------------------------------------------------------
+   SCHEMA VIEW
+---------------------------------------------------------------------------- */
+const CL = {
+  pp:   {x:40,  y:60,  w:560, h:500, c:'ing',     title:'study_schema · paper-parse', sub:'contracts C2 + C3 · LinkML v0.8.0 · produced by ingestion', repo:'schema'},
+  st:   {x:660, y:60,  w:900, h:560, c:'pondie',  title:'study_schema · storage Study', sub:'v0.9.0 · Study owns every entity below (nested lists); arrows are references by id', repo:'schema'},
+  ex:   {x:1620,y:60,  w:420, h:380, c:'pondie',  title:'study_schema · extraction', sub:'v0.6.0 · pondie output · every scalar is an ExtractedValue', repo:'schema'},
+  nm:   {x:40,  y:620, w:560, h:320, c:'nimare',  title:'NIMADS', sub:'meta-analysis interchange · relationships are nested object or id', repo:'nimads'},
+  db:   {x:660, y:690, w:900, h:470, c:'store',   title:'neurostore Postgres', sub:'store/backend/neurostore/models/data.py', repo:'store'},
+  cp:   {x:1620,y:690, w:420, h:470, c:'compose', title:'neurosynth-compose Postgres', sub:'compose/backend/neurosynth_compose/models/analysis.py', repo:'compose'},
+};
+const ENT = []; // {id, cl, col,row, name, key, fields:[[f,desc]]}
+function ent(cl, col, row, id, name, key, fields, opt={}) { ENT.push({id, cl, col, row, name, key, fields, ...opt}); }
+// paper-parse (3 cols × 70)
+ent('pp',0,0,'pp-header','ArtifactHeader','kind · schema_version · producer',[['artifact_kind',''],['schema_version',''],['article_id','catalog id'],['identifiers','ArticleIdentifiers'],['producer','Producer {name, version, stage, model, prompt_version}'],['inputs','InputRef*'],['neurostore_base_study_id','→ neurostore BaseStudy']]);
+ent('pp',1,0,'pp-ids','ArticleIdentifiers','pmid · pmcid · doi',[['pmid',''],['pmcid',''],['doi',''],['preprint_dois','PreprintDoi* {doi, server}'],['publication_status','required']]);
+ent('pp',2,0,'pp-producer','Producer','name · version · model',[['name',''],['version',''],['stage',''],['model',''],['prompt_version','']]);
+ent('pp',0,1,'pp-paper','ParsedPaper','C2 · text_sha256',[['header','ArtifactHeader'],['source','pmc · europepmc · pubget · elsevier · springer · ace · pdf'],['text_copy','HeldCopy (route, version, license, access)'],['reported_copies','ReportedCopy*'],['text_path / text_sha256','required'],['bibliography','Bibliography'],['is_meta_analysis','required'],['sections, supplements',''],['references / citations','Reference*, Citation*'],['tables','ParsedTable*']]);
+ent('pp',1,1,'pp-bib','Bibliography','title · authors · licence',[['title','required'],['authors*',''],['journal, publication_year',''],['abstract, abstract_provider',''],['license','License {license_id, determination, stated_by}'],['oa_status',''],['corrections','Correction* (retractions, errata)']]);
+ent('pp',2,1,'pp-copy','HeldCopy · License','route · version · access',[['route','CopyRoute'],['version','CopyVersion'],['license','License'],['access','CopyAccess']]);
+ent('pp',0,2,'pp-table','ParsedTable','table_id · rows · triage',[['table_id',''],['caption, footer',''],['rows','TableRow*'],['triage','TableTriage']]);
+ent('pp',1,2,'pp-cite','Citation','text_span → references',[['text_span','TextSpan'],['references','→ Reference*']]);
+ent('pp',2,2,'pp-ref','Reference','reference list entry',[['…','bibliographic reference']]);
+ent('pp',0,3,'pp-parse','CoordinateParse','C3 · parse_id · revision_of',[['header','ArtifactHeader'],['parse_id','required'],['text_sha256','joins to ParsedPaper'],['revision_of','→ CoordinateParse (pondie revision, planned)'],['analyses','ParsedAnalysis*'],['tables','TableReading*'],['omitted_analyses*',''],['text_sweep','TextSweep'],['verdicts','AnalysisVerdict* (accept, relabel, edit, split, merge, omit, add)']]);
+ent('pp',1,3,'pp-reading','TableReading','per-table reading',[['table_id','→ ParsedTable']]);
+ent('pp',2,3,'pp-verdict','AnalysisVerdict','accept · relabel · split …',[['verdict','accept · relabel · edit · split · merge · omit · add']]);
+ent('pp',0,4,'pp-analysis','ParsedAnalysis','key = analysis#<sha256[:16]>',[['key','analysis#<sha256(name, space, points)[:16]>'],['cells','CellRef*'],['text_spans','TextSpan*'],['origin','required'],['table_id','→ ParsedTable'],['name','required'],['coordinate_space',''],['role','result · anchor · localization · reference · other'],['anchor_kind',''],['split','SignSplit {half, original_analysis, rule}'],['statistic, thresholds',''],['points','ParsedPoint*']]);
+ent('pp',1,4,'pp-cell','CellRef','table cell citation',[['table_id, row, col','']]);
+ent('pp',2,4,'pp-split','SignSplit','half · original_analysis',[['half',''],['original_analysis',''],['rule','']]);
+ent('pp',0,5,'pp-point','ParsedPoint','coordinates[3] · space',[['coordinates[3]','required (NIMADS names)'],['space',''],['row',''],['values','PointValue*'],['cluster_size',''],['is_subpeak',''],['label','']]);
+ent('pp',1,5,'pp-pval','PointValue','kind · value · correction',[['kind',''],['value',''],['level',''],['correction','']]);
+ent('pp',2,5,'pp-span','TextSpan','start_char · end_char',[['start_char',''],['end_char',''],['text','']]);
+// storage (5 cols × 80)
+ent('st',0,0,'st-design','StudyDesign','allocation · blinding',[['allocation',''],['assignment_structure',''],['blinding',''],['arms','Arm*'],['timepoints','Timepoint*']]);
+ent('st',1,0,'st-arm','Arm','name · arm_kind · agent',[['id',''],['name','required'],['arm_kind','required'],['agent','']]);
+ent('st',2,0,'st-study','Study','tree root',[['id',''],['bibliography','Bibliography (copied from C2)'],['identifiers','ArticleIdentifiers (copied from C2)'],['description, hypothesis*',''],['design','StudyDesign'],['groups, tasks, assessments, regions, devices, acquisitions, preprocessings, model_estimations, inference_settings, measures, analyses, tables, coordinate_sets, external_datasets','all nested lists'],['result_reporting, outcome_summary','enums']]);
+ent('st',3,0,'st-timepoint','Timepoint','relation_to_intervention',[['id',''],['name','required'],['relation_to_intervention','required'],['order',''],['time_from_intervention','']]);
+ent('st',4,0,'st-extds','ExternalDataset','name · url',[['name',''],['url','']]);
+ent('st',0,1,'st-group','Group','species · n · age · diagnosis',[['name, species','required'],['arm','→ Arm'],['approached / consented / enrolled / acquired / excluded','counts'],['inclusion_criteria*, exclusion_criteria*',''],['age_mean, age_sd, age_min, age_max, age_median, age_unit',''],['sex, gender, handedness, race, ethnicity','CategoryDistribution*'],['is_healthy, medical_condition*, diagnostic_system',''],['diagnostic_instrument','→ Assessment*'],['medications*, medication_status',''],['sample_source, sample_overlap_count','']]);
+ent('st',1,1,'st-task','Task','paradigm · conditions',[['name, paradigm, paradigm_category',''],['reference_ids*',''],['variant_qualifiers','TaskQualifier*'],['conditions','Condition*'],['design_type',''],['acquisitions','→ Acquisition*'],['stimuli*, stimulus_modality*, response_modality*',''],['performance_measures*','']]);
+ent('st',2,1,'st-cond','Condition','name · condition_kind',[['id',''],['name','required'],['stimulus_content*',''],['condition_kind',''],['description','']]);
+ent('st',3,1,'st-assess','Assessment','questionnaire / instrument',[['id',''],['name','required'],['description',''],['assessment_type','']]);
+ent('st',4,1,'st-region','Region','definition_method · atlas',[['id',''],['name','required'],['definition_method','required'],['region_type',''],['atlas','']]);
+ent('st',0,2,'st-catdist','CategoryDistribution','category · count · %',[['category','required'],['category_normalized',''],['count, percentage, denominator','']]);
+ent('st',1,2,'st-acq','Acquisition','modality: fMRI · EEG · PET …',[['acquisition_type','required'],['modality','fMRI · sMRI · dMRI · MRI · EEG · fNIRS · PET · MEG · SPECT · other (enum)'],['device','→ Device'],['brain_coverage',''],['subclasses','MRI (TR, TE, field strength, voxel size), EEG, FNIRS, PET, OtherModality']]);
+ent('st',2,2,'st-device','Device','manufacturer · model',[['manufacturer',''],['model','']]);
+ent('st',3,2,'st-table','Table','table_number · purpose',[['table_number',''],['caption, footer',''],['source_path',''],['coordinate_space',''],['column_headings*',''],['coordinate_count',''],['purpose','']]);
+ent('st',4,2,'st-cset','CoordinateSet','role · anchor_kind',[['table','→ Table'],['text_excerpt',''],['role',''],['result_kind',''],['anchor_kind',''],['analysis','→ Analysis'],['regions','→ Region*']]);
+ent('st',0,3,'st-preproc','Preprocessing','software · smoothing',[['software*',''],['steps*',''],['smoothing_fwhm_mm*','']]);
+ent('st',1,3,'st-model','ModelEstimation','model_family · stage',[['model_family, model_type, stage','required'],['hrf_model, estimator, software, spatial_unit',''],['preprocessing','→ Preprocessing*'],['inputs_from','→ ModelEstimation* (acyclic)'],['terms','ModelTerm*']]);
+ent('st',2,3,'st-term','ModelTerm','regressor / factor',[['name','unique within model'],['type','categorical · continuous'],['levels','FactorLevel*'],['assessment','→ Assessment'],['region','→ Region'],['interaction_with','→ ModelTerm*'],['variation_level, functional_form, unit','']]);
+ent('st',3,3,'st-level','FactorLevel','junction to entities',[['level','required (key within term)'],['order',''],['conditions','→ Condition*'],['groups','→ Group*'],['timepoints','→ Timepoint*'],['arms','→ Arm*'],['regions','→ Region*']]);
+ent('st',4,3,'st-infer','InferenceSettings','thresholds · correction',[['height and cluster thresholds',''],['multiple_comparison_method, correction_scope',''],['correction_regions','→ Region*'],['tfce_*, permutation_count, alpha_level','']]);
+ent('st',0,4,'st-measure','Measure','family · type · unit',[['family, type','required'],['source_label, specific_metric, unit','']]);
+ent('st',1,4,'st-analysis','Analysis','definition · spatial_scope',[['name, definition, prespecification, spatial_scope','required'],['outcome',''],['regions, defines_regions','→ Region*'],['measure','→ Measure'],['groups','AnalysisGroup*'],['effect','Effect'],['details','AnalysisDetails'],['acquisitions, tasks, assessments, tables','→ *'],['model_estimation','→ ModelEstimation'],['inference_settings','→ InferenceSettings'],['mirror_of','→ Analysis'],['source_table_analysis','C3 ParsedAnalysis.key'],['statistical_maps','StatisticalMap*'],['coordinate_space','']]);
+ent('st',2,4,'st-effect','Effect','contrast = cells + statistic',[['cells','Cell*'],['kind','derived'],['mediation','Mediation'],['statistic','Statistic']]);
+ent('st',3,4,'st-cell','Cell','term · level · direction',[['term','→ ModelTerm'],['level','string-matched to FactorLevel.level'],['direction','positive · negative · undirected · held'],['label','']]);
+ent('st',4,4,'st-map','StatisticalMap','map_type · url (≈ Image)',[['map_type','required'],['url',''],['coordinate_space',''],['is_thresholded, statistic_type','']]);
+ent('st',0,5,'st-agroup','AnalysisGroup','group · n',[['group','→ Group'],['n','']]);
+ent('st',1,5,'st-details','AnalysisDetails','MassUnivariate · Decoding …',[['subclasses','MassUnivariate, Decoding, Similarity, Connectivity, Conjunction, LatentDecomposition, Other, NotStructurable']]);
+ent('st',2,5,'st-stat','Statistic','family · df',[['family','required'],['df_num, df_den','']]);
+ent('st',3,5,'st-med','Mediation','path · mediator',[['path','required'],['mediator','→ ModelTerm']]);
+// extraction (2 cols)
+ent('ex',0,0,'ex-study','extraction Study','= storage Study, wrapped',[['local_id','replaces id'],['stable_id','UUID minted by the store (17 classes)'],['extraction_metadata','ExtractionMetadata'],['every scalar','ExtractedValue']]);
+ent('ex',1,0,'ex-meta','ExtractionMetadata','model · version · date',[['extractor_model, extractor_version','required'],['source_text_hash',''],['extraction_date',''],['repaired_by',''],['paper_sections','PaperSection*']]);
+ent('ex',0,1,'ex-value','ExtractedValue','status · value · evidence',[['extraction_status',''],['value',''],['value_source',''],['unreported_reason',''],['evidence','Evidence']]);
+ent('ex',0,2,'ex-evidence','Evidence','status · sets',[['status',''],['sets','EvidenceSet*'],['unlocated_quotes','']]);
+ent('ex',1,2,'ex-eset','EvidenceSet','source · spans',[['source',''],['spans','EvidenceSpan*']]);
+ent('ex',1,3,'ex-span','EvidenceSpan','text · start/end_char',[['text',''],['start_char, end_char','offsets into ParsedPaper text']]);
+// NIMADS (3 cols × 80)
+ent('nm',0,0,'nm-studyset','Studyset','name · doi · pmid',[['name, description, publication, doi, pmid',''],['studies','Study*']]);
+ent('nm',1,0,'nm-annot','Annotation','note_keys',[['name, description, metadata',''],['note_keys','column → type'],['studyset','→ Studyset'],['notes','NoteCollection*']]);
+ent('nm',2,0,'nm-note','NoteCollection','note per analysis',[['note','object'],['analysis','→ Analysis'],['annotation','→ Annotation']]);
+ent('nm',0,1,'nm-study','Study','doi · authors · year',[['doi, pmid, name, metadata, description, publication, authors, year',''],['analyses','Analysis*']]);
+ent('nm',1,1,'nm-analysis','Analysis','name · weights',[['name, description',''],['weights*',''],['conditions','Condition*'],['images','Image*'],['points','Point*'],['study','→ Study']]);
+ent('nm',2,1,'nm-cond','Condition','name · description',[['name, description','']]);
+ent('nm',0,2,'nm-image','Image','url · space · value_type',[['metadata, url, filename, space, value_type, add_date',''],['analysis','→ Analysis']]);
+ent('nm',1,2,'nm-point','Point','coordinates[3] · space · kind',[['coordinates[3]','nullable x, y, z'],['space, kind, label_id',''],['values','PointValue* {kind, value}'],['image','→ Image'],['analysis','→ Analysis']]);
+ent('nm',2,2,'nm-pval','PointValue','kind · value',[['kind',''],['value','']]);
+// neurostore DB (5 cols × 80)
+ent('db',0,0,'db-base','BaseStudy','doi · pmid · is_retracted',[['doi, pmid, pmcid, name, authors, year, publication',''],['metadata_','JSONB'],['is_oa, has_coordinates, has_images',''],['ace_fulltext, pubget_fulltext',''],['superseded_by','→ BaseStudy'],['is_retracted','from bibliography.corrections']],{line:197});
+ent('db',1,0,'db-study','Study','version · source',[['base_study_id','→ BaseStudy'],['source','"study_schema" = pipeline-owned; "study_schema:superseded" = history'],['source_id, metadata_, user','']],{line:506});
+ent('db',2,0,'db-sss','StudysetStudy','N:M · curation_stub_uuid',[['study_id, studyset_id','PK'],['curation_stub_uuid','links to compose curation stub']],{line:589});
+ent('db',3,0,'db-studyset','Studyset','name · public',[['name, metadata, source, public, user','']],{line:77});
+ent('db',4,0,'db-annot','Annotation','note_keys',[['studyset_id','→ Studyset'],['note_keys','JSONB'],['metadata','']],{line:124});
+ent('db',0,1,'db-table','Table','t_id · caption',[['study_id','→ Study'],['t_id','unique per study'],['label, caption, footer','']],{line:625});
+ent('db',1,1,'db-analysis','Analysis','source_id = content key · role',[['study_id, table_id',''],['name, metadata_, order',''],['source_id','C3 content key analysis#<16hex>'],['point_count, image_count',''],['outcome, role, relabelled_by, from_prior_study','']],{line:652});
+ent('db',2,1,'db-cond','Condition','via AnalysisConditions (weight)',[['name, description',''],['AnalysisConditions','N:M with weight']],{line:724});
+ent('db',3,1,'db-entity','Entity','label · level',[['analysis_id',''],['label, level, data',''],['points, images','N:M']],{line:788});
+ent('db',4,1,'db-aa','AnnotationAnalysis','note JSONB',[['annotation_id, analysis_id, study_id, studyset_id',''],['note','JSONB']],{line:148});
+ent('db',0,2,'db-point','Point','x · y · z · space',[['x, y, z, space, kind',''],['label_id, cluster_size, subpeak, deactivation, is_seed, order','']],{line:807});
+ent('db',1,2,'db-pval','PointValue','kind · value',[['kind, value','']],{line:967});
+ent('db',2,2,'db-image','Image','url · value_type',[['url, filename, space, value_type, data',''],['analysis_id, study_id','']],{line:856});
+ent('db',3,2,'db-ivs','ImageValueSummary','voxel stats · histogram',[['statistics',''],['histogram','']],{line:903});
+ent('db',0,3,'db-pipe','Pipeline','name · study_dependent',[['name','unique'],['study_dependent, ace_compatible, pubget_compatible','']],{line:983});
+ent('db',1,3,'db-pconf','PipelineConfig','version · schema · hash',[['version, config_args, schema, config_hash',''],['has_embeddings','']],{line:994});
+ent('db',2,3,'db-psr','PipelineStudyResult','result_data JSONB',[['base_study_id','→ BaseStudy'],['run_id',''],['result_data','JSONB — filterable via feature_filter'],['file_inputs, status','']],{line:1020});
+ent('db',3,3,'db-par','PipelineAnalysisResult','source_table_analysis',[['analysis_id','→ Analysis'],['source_table_analysis','C3 key'],['result_data','']],{line:1094});
+ent('db',4,3,'db-pemb','PipelineEmbedding','pgvector',[['embedding','vector']],{line:1055});
+ent('db',0,4,'db-sent','StudyEntity','entity_class · entity_hash',[['base_study_id','→ BaseStudy'],['entity_class','one of 18 storage classes'],['entity_hash','sha256, study-entity/3'],['parent_id','→ StudyEntity (tree)'],['identity, analysis_id, table_id','']],{line:1193});
+ent('db',1,4,'db-claim','FieldClaim','field_path · value · origin',[['entity_id','→ StudyEntity'],['field_path, schema_version',''],['value, value_hash',''],['origin, origin_user_id','machine or human'],['carried_from','']],{line:1301});
+ent('db',2,4,'db-cev','FieldClaimEvidence','spans · source · status',[['spans, source, status','']],{line:1371});
+ent('db',3,4,'db-crun','FieldClaimRun','claim ↔ config',[['claim, config','N:M']],{line:1351});
+ent('db',4,4,'db-elink','ExtractionEntityLink','(config, local_id) → entity',[['config_id, local_id',''],['entity','→ StudyEntity']],{line:1281});
+// compose (2 cols × 72)
+ent('cp',0,0,'cp-proj','Project','type · provenance JSON',[['name, type (CBMA/IBMA), public, draft',''],['provenance','curationMetadata + extractionMetadata'],['neurostore_studyset_id','→ StudysetReference'],['neurostore_annotation_id','→ AnnotationReference']]);
+ent('cp',1,0,'cp-tag','Tag','',[['name','']]);
+ent('cp',0,1,'cp-ma','MetaAnalysis','run_key',[['specification_id','→ Specification'],['neurostore_studyset_id, neurostore_annotation_id',''],['project_id','→ Project'],['provenance, run_key','']]);
+ent('cp',1,1,'cp-spec','Specification','estimator · corrector · filter',[['type',''],['estimator','JSON (NiMARE class + args)'],['corrector','JSON'],['filter','annotation column'],['database_studyset','neurosynth · neuroquery · neurostore'],['conditions','SpecificationCondition (weight)']]);
+ent('cp',0,2,'cp-ssref','StudysetReference','neurostore studyset id',[['id','= neurostore Studyset.id']]);
+ent('cp',1,2,'cp-sssnap','SnapshotStudyset','snapshot JSONB · md5',[['snapshot','NIMADS studyset JSON'],['md5','unique'],['version','']]);
+ent('cp',0,3,'cp-anref','AnnotationReference','neurostore annotation id',[['id','= neurostore Annotation.id']]);
+ent('cp',1,3,'cp-ansnap','SnapshotAnnotation','snapshot · md5',[['snapshot','NIMADS annotation JSON'],['md5',''],['snapshot_studyset_id','']]);
+ent('cp',0,4,'cp-result','MetaAnalysisResult','maps · tables · method',[['cli_version, cli_args',''],['method_description, method_references',''],['diagnostic_table',''],['studyset_snapshot_id, annotation_snapshot_id','']]);
+ent('cp',1,4,'cp-nvc','NeurovaultCollection','collection_id',[['collection_id',''],['result_id','unique']]);
+ent('cp',0,5,'cp-nsa','NeurostoreAnalysis','write-back status',[['status','OK · FAILED · PENDING']]);
+ent('cp',1,5,'cp-nvf','NeurovaultFile','image_id · status',[['image_id, url, space, value_type, status','']]);
+
+const R = (a,b,l,o={}) => ({a,b,l,...o});
+const RELS = [
+ // paper-parse
+ R('pp-paper','pp-header','header'),R('pp-parse','pp-header','header'),R('pp-header','pp-ids','identifiers'),R('pp-header','pp-producer','producer'),
+ R('pp-paper','pp-bib','bibliography'),R('pp-paper','pp-copy','text_copy'),R('pp-paper','pp-table','tables 1:N'),R('pp-paper','pp-cite','citations 1:N'),R('pp-cite','pp-ref','→ references'),
+ R('pp-parse','pp-analysis','analyses 1:N'),R('pp-parse','pp-reading','tables 1:N'),R('pp-parse','pp-verdict','verdicts 1:N'),R('pp-reading','pp-table','→ table_id'),
+ R('pp-analysis','pp-cell','cells'),R('pp-analysis','pp-split','split'),R('pp-analysis','pp-point','points 1:N'),R('pp-point','pp-pval','values 1:N'),R('pp-analysis','pp-span','text_spans'),
+ R('pp-parse','pp-paper','text_sha256 =',{map:1}),
+ // storage
+ R('st-study','st-design','design'),R('st-design','st-arm','arms'),R('st-design','st-timepoint','timepoints'),R('st-group','st-arm','→ arm'),R('st-group','st-catdist','sex, handedness…'),R('st-group','st-assess','→ diagnostic_instrument'),
+ R('st-task','st-cond','conditions'),R('st-task','st-acq','→ acquisitions'),R('st-acq','st-device','→ device'),
+ R('st-model','st-preproc','→ preprocessing'),R('st-model','st-term','terms'),R('st-term','st-level','levels'),R('st-term','st-assess','→ assessment'),R('st-term','st-region','→ region'),
+ R('st-level','st-cond','→ conditions'),R('st-level','st-group','→ groups'),R('st-level','st-timepoint','→ timepoints'),R('st-level','st-arm','→ arms'),R('st-level','st-region','→ regions'),
+ R('st-analysis','st-measure','→ measure'),R('st-analysis','st-agroup','groups'),R('st-agroup','st-group','→ group'),R('st-analysis','st-effect','effect'),R('st-effect','st-cell','cells'),R('st-cell','st-term','→ term'),R('st-cell','st-level','level (string)'),
+ R('st-effect','st-stat','statistic'),R('st-effect','st-med','mediation'),R('st-med','st-term','→ mediator'),R('st-analysis','st-details','details'),R('st-analysis','st-model','→ model_estimation'),R('st-analysis','st-infer','→ inference_settings'),
+ R('st-analysis','st-table','→ tables'),R('st-analysis','st-task','→ tasks'),R('st-analysis','st-map','statistical_maps'),R('st-infer','st-region','→ correction_regions'),R('st-cset','st-table','→ table'),R('st-cset','st-analysis','→ analysis'),R('st-cset','st-region','→ regions'),
+ // extraction
+ R('ex-study','ex-meta','extraction_metadata'),R('ex-study','ex-value','every scalar'),R('ex-value','ex-evidence','evidence'),R('ex-evidence','ex-eset','sets'),R('ex-eset','ex-span','spans'),
+ // nimads
+ R('nm-studyset','nm-study','studies 1:N'),R('nm-study','nm-analysis','analyses 1:N'),R('nm-analysis','nm-cond','conditions N:M + weights'),R('nm-analysis','nm-point','points'),R('nm-analysis','nm-image','images'),R('nm-point','nm-pval','values'),
+ R('nm-annot','nm-studyset','→ studyset'),R('nm-annot','nm-note','notes'),R('nm-note','nm-analysis','→ analysis'),
+ // neurostore
+ R('db-base','db-study','versions 1:N'),R('db-study','db-sss','N:M'),R('db-sss','db-studyset',''),R('db-studyset','db-annot','annotations 1:N'),R('db-annot','db-aa','notes 1:N'),R('db-aa','db-analysis','→ analysis'),
+ R('db-study','db-table','tables'),R('db-study','db-analysis','analyses'),R('db-table','db-analysis','table_id'),R('db-analysis','db-cond','N:M weight'),R('db-analysis','db-entity','entities'),R('db-analysis','db-point','points'),R('db-analysis','db-image','images'),
+ R('db-point','db-pval','values'),R('db-image','db-ivs','1:1'),R('db-pipe','db-pconf','configs'),R('db-pconf','db-psr','results'),R('db-pconf','db-par',''),R('db-pconf','db-pemb',''),R('db-psr','db-base','→ base_study'),R('db-par','db-analysis','→ analysis'),
+ R('db-sent','db-base','→ base_study'),R('db-sent','db-claim','claims 1:N'),R('db-claim','db-cev','evidence'),R('db-claim','db-crun','runs'),R('db-crun','db-pconf','→ config'),R('db-elink','db-sent','→ entity'),R('db-elink','db-pconf','→ config'),R('db-sent','db-analysis','→ analysis_id'),
+ // compose
+ R('cp-proj','cp-ma','meta_analyses'),R('cp-proj','cp-tag','tags'),R('cp-proj','cp-ssref','→ studyset'),R('cp-ma','cp-spec','→ specification'),R('cp-ma','cp-ssref','→ studyset'),R('cp-ma','cp-anref','→ annotation'),
+ R('cp-ssref','cp-sssnap','snapshots'),R('cp-anref','cp-ansnap','snapshots'),R('cp-ma','cp-result','results'),R('cp-result','cp-sssnap','→ snapshot'),R('cp-result','cp-nvc','1:1'),R('cp-nvc','cp-nvf','files'),R('cp-ma','cp-nsa','write-back'),
+ // cross-schema joins
+ R('pp-analysis','db-analysis','key → Analysis.source_id',{map:1,d:'Neurostore keys each uploaded analysis by its C3 content key, so re-uploads and revisions find the same row.'}),
+ R('st-analysis','pp-analysis','source_table_analysis',{map:1,d:'A storage Analysis points at the C3 ParsedAnalysis it was derived from.'}),
+ R('pp-point','nm-point','field copy',{map:1,d:'ParsedPoint uses NIMADS names and meaning for coordinates, space and values, so projecting a parse to a studyset is a field copy (study_schema coordinates.yaml).'}),
+ R('pp-header','db-base','neurostore_base_study_id',{map:1}),
+ R('db-psr','pp-parse','pipeline "coordinate-parse" keeps every C3',{map:1}),
+ R('db-sent','st-study','StudyEntity per storage entity; FieldClaim per field',{map:1,d:'entity_class is one of the 18 storage classes; each value is a FieldClaim with origin (machine or human).'}),
+ R('ex-study','st-study','mapper (spec only)',{map:1,plan:1,d:'extraction-to-storage.map.yaml: 35 derivations, 1 conditional, 5 free-text normalisations. No mapper code exists.'}),
+ R('ex-span','pp-paper','offsets into text_sha256',{map:1}),
+ R('db-cev','ex-span','spans stored',{map:1}),
+ R('db-elink','ex-study','(config, local_id)',{map:1}),
+ R('st-study','pp-bib','bibliography copied from C2',{map:1}),
+ R('db-studyset','nm-studyset','API serves NIMADS',{map:1}),
+ R('db-point','nm-point','API serves NIMADS',{map:1}),
+ R('cp-ssref','db-studyset','id',{map:1}),R('cp-anref','db-annot','id',{map:1}),
+ R('cp-sssnap','nm-studyset','snapshot is NIMADS JSON',{map:1}),
+];
+
+/* ----------------------------------------------------------------------------
+   FLOW STEPS
+---------------------------------------------------------------------------- */
+const FLOWS = {
+ neurostore: [
+  {t:'Find papers', d:'ingest add from ids, a search, or neurostore studies that lack a parse.', ids:['ing-add','E6','E7','sources']},
+  {t:'Download & extract', d:'First source that succeeds; text + tables per source.', ids:['E1','ing-download','ing-extract','i2']},
+  {t:'Metadata & triage', d:'Bibliography, licences, retractions; which tables deserve an LLM.', ids:['ing-metadata','ing-notices','ing-triage','i3','i4']},
+  {t:'Parse coordinates', d:'Table LLM, optional prose track, merged in resolve.', ids:['ing-analyses','ing-passages','ing-prose','ing-resolve','i5','i6','i7','i8','i9']},
+  {t:'Roles & space', d:'Which coordinate sets are results; MNI vs Talairach.', ids:['ing-roles','ing-space','i10','i11']},
+  {t:'Emit C2 + C3, upload', d:'study_schema contracts to the ns-pond tree and to neurostore.', ids:['ing-sync','ing-upload','nspond','E2','E3','i12','i13','k-c2','k-c3']},
+  {t:'neurostore ingests', d:'Base study, pipeline-owned Study, analyses by content key, parse as pipeline result.', ids:['ns-uploads','ns-db-bib','ns-db-pipe','ns-db-claims','s1','s2']},
+  {t:'pondie extracts metadata', d:'Groups, tasks, modality, models, effects from full text + C3.', ids:['E4','pd-corpus','pd-tables','pd-split','pd-single','pd-fill','pd-evidence','pd-build','pd-repair','pd-normalize','k-ext']},
+  {t:'Record back to neurostore', d:'Upload kinds exist; pondie client and mapper do not.', ids:['E5','ns-uploads','ns-db-claims','k-storage']},
+  {t:'Review & filter', d:'feature_filter / semantic search over pipeline results; review API is a draft.', ids:['ns-filter','ns-review','ns-db-pipe','s3']},
+  {t:'Curate in compose', d:'Project → curation → extraction creates the studyset + annotation.', ids:['user','E8','E9','cp-project','cp-curation','cp-extraction','E10','c0','c1']},
+  {t:'Specify & run', d:'Estimator, corrector, annotation filter → compose-runner on AWS.', ids:['cp-spec','cp-run','c2','c3','E12','cr-submit','cr-sfn','cr-ecs','r0','r1']},
+  {t:'NiMARE executes', d:'Live studyset from neurostore → Studyset → workflow.', ids:['cr-download','cr-process','cr-run','E13','E14','E16','nm-studyset','nm-cbma','nm-correct','nm-workflow','nm-diag','r2','r3','r4']},
+  {t:'Results come back', d:'Maps + tables to compose, NeuroVault, and a neurostore analysis.', ids:['cr-result','cr-upload','E15','cp-results','cp-worker','E17','nv','E11','c4','r5','r6']},
+ ],
+ autonima: [
+  {t:'Search', d:'PubMed query or a PMID list.', ids:['au-search','E19','src-pubmed']},
+  {t:'Screen abstracts', d:'LLM against inclusion/exclusion criteria.', ids:['au-abstract','a0','au-llm']},
+  {t:'Retrieve full text', d:'records → local corpora/ACE → pubget. ns-pond input is intended.', ids:['au-retrieval','au-records','a1','a9','E20','nspond']},
+  {t:'Screen full text', d:'Second LLM screen.', ids:['au-fulltext','a2']},
+  {t:'Coordinates', d:'Own LLM table parsing, or analyses from records. neurostore input is intended.', ids:['au-parsing','a3','E21']},
+  {t:'Annotate analyses', d:'analysis × criteria inclusion matrix.', ids:['au-annotation','a4']},
+  {t:'Write NIMADS', d:'Own NIMADS dataclasses → studyset + annotation JSON.', ids:['au-output','au-out','a5','k-nimads']},
+  {t:'Run NiMARE', d:'autonima meta: CBMAWorkflow per annotation column.', ids:['au-meta','a6','E23','nm-studyset','nm-workflow','nm-results']},
+  {t:'Upload to neurostore', d:'Intended; not implemented.', ids:['E22']},
+ ],
+};
+
+const GAPS = [
+ ['plan','neurostore → extraction for user uploads','No webhook, queue or outbox sends direct uploads to the pipeline. Today ingestion pulls by reading neurostore Postgres (ingest add --from-neurostore) for studyset studies lacking a study_schema Study. The store already runs two outbox workers; a third outbox is the obvious shape.'],
+ ['plan','pondie → neurostore','neurostore accepts record / parse_and_record / revision uploads and stores them as StudyEntity + FieldClaim, but pondie has no client, writes no C3 revisions, and the extraction→storage mapper exists only as extraction-to-storage.map.yaml. pondie\'s corpus sync also skips parse/, so it falls back to stage1/analyses.json unless C2/C3 are copied separately.'],
+ ['plan','autonima ↔ ns-pond / neurostore','autonima has no neurostore client and no ns-pond adapter. The document-sources layout (#85: <pmid>.md + <pmid>.analyses.json) is where ns-pond full text and neurostore coordinates could enter. Results never leave autonima\'s outputs/ folder.'],
+ ['spec','Review API','/review/*, /imports/pipeline and /schemas/{name} are in neurostore-spec main (draft PR #110) but neurostore main pins an older spec and has no review code.'],
+ ['plan','study_schema pins differ','ingestion pins 7c0425a (= study_schema main), neurostore pins 2cc7bec, pondie pins 49938bd. Contract changes reach the three consumers at different times.'],
+ ['ok','study_schema vs NIMADS','Separate on purpose: study_schema README says the parse contracts live there “rather than as a NIMADS extension” and NIMADS stays the meta-analysis interchange. They already share the point shape (ParsedPoint ≈ NIMADS Point; parquet points use NIMADS column names). Combining them would mean making NIMADS a projection of storage + C3 rather than a second hand-written schema.'],
+ ['ok','NeuroVault upload lives in compose','compose-runner takes --nv-key but never uses it; the compose Celery worker uploads maps.'],
+ ['ok','Two NIMADS writers','autonima writes NIMADS with its own dataclasses and uses the deprecated Studyset.to_dataset() path; compose-runner and pondie use nimare.nimads.Studyset directly.'],
+ ['ok','Stale docs','pondie README says its study_schema submodule is unused (it is imported via the pip pin); study_schema README says neither tool reads the contracts (pondie now reads C2/C3).'],
+];
+
+/* ----------------------------------------------------------------------------
+   RENDERING
+   Inner parts (stage chips, schema entities) start hidden; a box or cluster shows
+   them only once opened. While closed, arrows attach to the box border.
+---------------------------------------------------------------------------- */
+const NODES = {}; // id -> {x,y,w,h,el,kind,data}
+const expanded = new Set();
+let hlIds = [];
+const ENT_CL = {}; ENT.forEach(e=>ENT_CL[e.id]=e.cl);
+const CHIP_BOX = {}; CHIPS.forEach(c=>CHIP_BOX[c.id]=c.box);
+const owner = (id) => CHIP_BOX[id] || (ENT_CL[id] ? 'cl-'+ENT_CL[id] : null);
+const isOpen = (id) => { const o=owner(id); return !o || expanded.has(o); };
+const visibleEnd = (id) => isOpen(id) ? id : owner(id);
+const innerCount = (id) => CHIPS.filter(c=>c.box===id).length || ENT.filter(e=>'cl-'+e.cl===id).length;
+
+function el(tag, attrs={}, parent) { const e=document.createElementNS(NS,tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function wrap(text, maxChars) {
+  const words = String(text).split(/\s+/); const lines=[]; let cur='';
+  for (const w of words) { if ((cur+' '+w).trim().length > maxChars && cur) { lines.push(cur); cur=w; } else cur=(cur+' '+w).trim(); }
+  if (cur) lines.push(cur); return lines;
+}
+function textLines(parent, lines, x, y, lh, cls, anchor='start') {
+  const t = el('text',{x,y,class:cls,'text-anchor':anchor},parent);
+  lines.forEach((ln,i)=>{ const s=el('tspan',{x,dy: i?lh:0},t); s.textContent=ln; });
+  return t;
+}
+const col = (c) => `var(--c-${c})`;
+
+function drawBox(g, id, b, cls='box') {
+  const n = innerCount(id);
+  const grp = el('g',{class:`${cls} node${n?' collapsible':''}`,'data-id':id,tabindex:0},g);
+  el('rect',{class:'frame',x:b.x,y:b.y,width:b.w,height:b.h,rx:12,stroke:col(b.c)},grp);
+  // open state: name in the header band
+  const ho = el('g',{class:'hdr-open'},grp);
+  if (!b.small) el('rect',{class:'head',x:b.x,y:b.y,width:b.w,height:54,rx:12,fill:col(b.c)},ho);
+  const t = el('text',{class:'title',x:b.x+16,y:b.small ? b.y+28 : b.y+25},ho); t.textContent=b.title;
+  if (b.small) t.setAttribute('style','font-size:19px');
+  if (b.sub) { const s=el('text',{class:'bsub',x:b.x+16,y:b.small? b.y+50 : b.y+45},ho); s.textContent=b.sub.replace(/`/g,''); }
+  // closed state: large name centred in the box
+  if (n) {
+    const hc = el('g',{class:'hdr-closed'},grp);
+    const fs = Math.min(46, (b.w*0.86)/(b.title.length*0.52));
+    const subL = b.sub ? wrap(b.sub.replace(/`/g,''), Math.floor(b.w/7.2)).slice(0,3) : [];
+    const blockH = fs + 10 + subL.length*18 + 26;
+    let y = b.y + b.h/2 - blockH/2 + fs*0.8;
+    const ct = el('text',{class:'ctitle','text-anchor':'middle',x:b.x+b.w/2,y,style:`font-size:${fs.toFixed(1)}px;fill:${col(b.c)}`},hc); ct.textContent=b.title;
+    y += 14 + 14;
+    if (subL.length) { textLines(hc, subL, b.x+b.w/2, y, 18, 'csub', 'middle'); y += subL.length*18 + 8; }
+    const p=el('text',{class:'peek','text-anchor':'middle',x:b.x+b.w/2,y},hc); p.textContent=`${n} ${cls==='cluster'?'entities':'parts'} · click to open`;
+  }
+  NODES[id] = {x:b.x,y:b.y,w:b.w,h:b.h,el:grp,kind:cls,data:b};
+  return grp;
+}
+function drawChip(g, c) {
+  const b = BOX[c.box]; const x=b.x+c.rx, y=b.y+c.ry;
+  const st = c.status && c.status!=='impl' ? c.status : '';
+  const grp = el('g',{class:`chip node ${st}`,'data-id':c.id,tabindex:0},g);
+  el('rect',{x,y,width:c.w,height:c.h,rx:7,fill:`color-mix(in srgb, ${col(b.c)} 13%, var(--surface))`,stroke:col(b.c)},grp);
+  if (c.row) {
+    const t=el('text',{class:'lab lod-mid',x:x+10,y:y+18},grp); t.textContent=c.label;
+    const s=el('text',{class:'sub lod-near',x:x+10,y:y+34},grp); s.textContent=c.sub;
+  } else {
+    const L = wrap(c.label, Math.max(10, Math.floor(c.w/7.4))).slice(0,2);
+    textLines(grp, L, x+8, y+18, 15, 'lab lod-mid');
+    const S = wrap(c.sub||'', Math.max(14, Math.floor(c.w/5.6))).slice(0, c.h>60?3:2);
+    textLines(grp, S, x+8, y+18+L.length*15+(L.length>1?-2:0), 12, 'sub lod-near');
+  }
+  if (st) { const p=el('text',{class:'sub lod-mid',x:x+c.w-8,y:y+c.h-7,'text-anchor':'end',style:`fill:var(--${st==='spec'?'spec':'plan'});font-weight:600`},grp); p.textContent= st==='spec'?'spec only':'intended'; }
+  NODES[c.id] = {x,y,w:c.w,h:c.h,el:grp,kind:'chip',data:c};
+}
+function anchor(spec, raw) {
+  const [id, side, t=.5] = spec; const n=NODES[id];
+  if (!raw && !isOpen(id)) { // closed box: same side of the box, aligned with the hidden part
+    const b=NODES[owner(id)], cx=n.x+n.w/2, cy=n.y+n.h/2, cl=(v,a,z)=>Math.max(a,Math.min(z,v));
+    if (side==='l') return {p:[b.x, cl(cy,b.y+60,b.y+b.h-12)], d:[-1,0]};
+    if (side==='r') return {p:[b.x+b.w, cl(cy,b.y+60,b.y+b.h-12)], d:[1,0]};
+    if (side==='t') return {p:[cl(cx,b.x+12,b.x+b.w-12), b.y], d:[0,-1]};
+    return {p:[cl(cx,b.x+12,b.x+b.w-12), b.y+b.h], d:[0,1]};
+  }
+  if (side==='l') return {p:[n.x, n.y+n.h*t], d:[-1,0]};
+  if (side==='r') return {p:[n.x+n.w, n.y+n.h*t], d:[1,0]};
+  if (side==='t') return {p:[n.x+n.w*t, n.y], d:[0,-1]};
+  return {p:[n.x+n.w*t, n.y+n.h], d:[0,1]};
+}
+function roundedPath(pts, r=14) {
+  let d=`M${pts[0][0]},${pts[0][1]}`;
+  for (let i=1;i<pts.length-1;i++){
+    const [px,py]=pts[i-1],[cx,cy]=pts[i],[nx,ny]=pts[i+1];
+    const l1=Math.hypot(cx-px,cy-py)||1, l2=Math.hypot(nx-cx,ny-cy)||1, rr=Math.min(r,l1/2,l2/2);
+    d+=` L${cx-(cx-px)/l1*rr},${cy-(cy-py)/l1*rr} Q${cx},${cy} ${cx+(nx-cx)/l2*rr},${cy+(ny-cy)/l2*rr}`;
+  }
+  const L=pts[pts.length-1]; return d+` L${L[0]},${L[1]}`;
+}
+function addLabel(grp, path, text, lt, cls, fs) {
+  const L=el('g',{class:'elab '+cls},grp); const m=path.getPointAtLength(path.getTotalLength()*lt);
+  const t=el('text',{x:m.x,y:m.y+4,'text-anchor':'middle',style:fs?`font-size:${fs}px`:''},L); t.textContent=text;
+  const bb=t.getBBox(); L.insertBefore(el('rect',{x:bb.x-5,y:bb.y-2,width:bb.width+10,height:bb.height+4,rx:4}), t);
+}
+function drawEdge(g, e) {
+  const raw=!!e.internal, A=anchor(e.a,raw), B=anchor(e.b,raw);
+  let d;
+  if (e.via) d = roundedPath([A.p, ...e.via, B.p]);
+  else { const dist=Math.hypot(B.p[0]-A.p[0],B.p[1]-A.p[1]); const k=Math.max(18, Math.min(120, dist*.4));
+    d=`M${A.p[0]},${A.p[1]} C${A.p[0]+A.d[0]*k},${A.p[1]+A.d[1]*k} ${B.p[0]+B.d[0]*k},${B.p[1]+B.d[1]*k} ${B.p[0]},${B.p[1]}`; }
+  const grp=el('g',{class:`edge ${e.st}${e.internal?' internal':' node'}`,'data-id':e.id,'data-status':e.st},g);
+  const path=el('path',{class:'line',d,'marker-end':`url(#ar-${e.st})`},grp);
+  if (!e.internal) el('path',{class:'hit',d},grp);
+  if (e.label) addLabel(grp, path, e.label, e.lt||.5, 'lod-mid');
+  NODES[e.id]={el:grp,kind:'edge',data:e,path};
+}
+
+const SYS={}, SCH={};
+function renderSystem() {
+  const g = $('#g-system');
+  const gb=el('g',{},g); SYS.inner=el('g',{},g); SYS.ext=el('g',{},g);
+  for (const id in BOX) drawBox(gb, id, BOX[id]);
+  for (const id in BOX) {
+    const gi=el('g',{class:'inner','data-box':id},SYS.inner), ge=el('g',{},gi), gc=el('g',{},gi);
+    CHIPS.filter(c=>c.box===id).forEach(c=>drawChip(gc,c));
+    EDGES.filter(e=>e.internal && CHIP_BOX[e.a[0]]===id).forEach(e=>drawEdge(ge,e));
+    if (id==='ing') { const bi=BOX.ing; [['main track',ir(0)],['prose track (when prose_model set)',ir(1)],['to neurostore',ir(2)],['opt-in & side outputs',ir(3)]].forEach(([s,y])=>{ const t=el('text',{class:'band lod-near',x:bi.x+bi.w-14,y:bi.y+y-6,'text-anchor':'end'},gc); t.textContent=s; }); }
+  }
+  SYS.inner.querySelectorAll('.inner').forEach(x=>x.style.display='none');
+  renderSystemEdges();
+}
+function renderSystemEdges() {
+  SYS.ext.textContent='';
+  EDGES.filter(e=>!e.internal).forEach(e=>drawEdge(SYS.ext,e));
+}
+
+const EW=168, EH=46;
+function entPos(e){ const c=CL[e.cl]; const sx = e.cl==='pp'||e.cl==='nm' ? 180 : (e.cl==='ex'||e.cl==='cp' ? 200 : 175); const sy = e.cl==='cp'? 66 : (e.cl==='ex'? 80 : (e.cl==='pp'?70:80)); return {x:c.x+20+e.col*sx, y:c.y+76+e.row*sy}; }
+function boxEdgePoint(n, toward){ const cx=n.x+n.w/2, cy=n.y+n.h/2; const dx=toward[0]-cx, dy=toward[1]-cy; if(!dx&&!dy) return [cx,cy];
+  const sx = Math.abs(dx)>1e-6 ? (n.w/2)/Math.abs(dx) : Infinity, sy = Math.abs(dy)>1e-6 ? (n.h/2)/Math.abs(dy) : Infinity; const s=Math.min(sx,sy); return [cx+dx*s, cy+dy*s]; }
+function drawRel(layer, id, a, b, data, curved, labelCls) {
+  const A=NODES[a], B=NODES[b]; if(!A||!B) return;
+  const pa=boxEdgePoint(A,[B.x+B.w/2,B.y+B.h/2]), pb=boxEdgePoint(B,[A.x+A.w/2,A.y+A.h/2]);
+  let d;
+  if (curved) { const mx=(pa[0]+pb[0])/2, my=(pa[1]+pb[1])/2, dx=pb[0]-pa[0], dy=pb[1]-pa[1], n=Math.hypot(dx,dy)||1, bend=Math.min(80,n*.15); d=`M${pa[0]},${pa[1]} Q${mx-dy/n*bend},${my+dx/n*bend} ${pb[0]},${pb[1]}`; }
+  else d=`M${pa[0]},${pa[1]} L${pb[0]},${pb[1]}`;
+  const grp=el('g',{class:`edge ${data.st}${curved?' node':''}`,'data-id':id,'data-status':data.st},layer);
+  const path=el('path',{class:'line',d,'marker-end':`url(#ar-${data.st})`},grp);
+  if (curved) el('path',{class:'hit',d},grp);
+  if (data.label) addLabel(grp, path, data.label, .5, labelCls, 10);
+  NODES[id]={el:grp,kind:'edge',data:{...data,a,b,schema:1},path};
+}
+const relSt = (r) => r.map ? (r.plan?'plan':'map') : 'rel';
+function renderSchema() {
+  const g=$('#g-schema');
+  const gb=el('g',{},g); SCH.inner=el('g',{},g); SCH.ext=el('g',{},g);
+  for (const id in CL) drawBox(gb, 'cl-'+id, CL[id], 'cluster');
+  RELS.forEach((r,i)=>r.id='rel'+i);
+  for (const k in CL) {
+    const gi=el('g',{class:'inner','data-box':'cl-'+k},SCH.inner), ge=el('g',{},gi), gn=el('g',{},gi);
+    ENT.filter(e=>e.cl===k).forEach(e=>{
+      const {x,y}=entPos(e); const c=CL[e.cl];
+      const grp=el('g',{class:'ent node','data-id':e.id,tabindex:0},gn);
+      el('rect',{x,y,width:EW,height:EH,rx:6,stroke:col(c.c),fill:`color-mix(in srgb, ${col(c.c)} 9%, var(--surface))`},grp);
+      const t=el('text',{class:'lab',x:x+8,y:y+19},grp); t.textContent=e.name;
+      const s=el('text',{class:'sub lod-mid',x:x+8,y:y+35},grp); s.textContent=(e.key||'').slice(0,30);
+      NODES[e.id]={x,y,w:EW,h:EH,el:grp,kind:'ent',data:e};
+    });
+    if (k==='st') { const st=CL.st; [['entities',1],['model',3],['result',4]].forEach(([s,r])=>{ const t=el('text',{class:'band',x:st.x+st.w-14,y:st.y+70+r*80,'text-anchor':'end'},gn); t.textContent=s; }); }
+    RELS.filter(r=>ENT_CL[r.a]===k && ENT_CL[r.b]===k).forEach(r=>drawRel(ge, r.id, r.a, r.b, {st:relSt(r),label:r.l,desc:r.d,map:r.map}, !!r.map, 'lod-near'));
+  }
+  SCH.inner.querySelectorAll('.inner').forEach(x=>x.style.display='none');
+  renderSchemaEdges();
+}
+function renderSchemaEdges() {
+  for (const k in NODES) if (NODES[k].kind==='edge' && NODES[k].data.cross) delete NODES[k];
+  SCH.ext.textContent='';
+  const groups=new Map();
+  RELS.filter(r=>ENT_CL[r.a]!==ENT_CL[r.b]).forEach(r=>{ const key=visibleEnd(r.a)+'|'+visibleEnd(r.b); if(!groups.has(key)) groups.set(key,[]); groups.get(key).push(r); });
+  groups.forEach((rs,key)=>{
+    const [a,b]=key.split('|'); const single = rs.length===1 && a===rs[0].a && b===rs[0].b;
+    const nm = (id)=>NODES[id].data.name||NODES[id].data.title;
+    const st = rs.every(r=>r.plan) ? 'plan' : 'map';
+    const data = single ? {st:relSt(rs[0]),label:rs[0].l,desc:rs[0].d,map:1,cross:1}
+      : {st, label: rs.length===1 ? rs[0].l : `${rs.length} joins`, cross:1, joins:rs, ends:[a,b,...rs.flatMap(r=>[r.a,r.b])],
+         desc: rs.map(r=>`${nm(r.a)} → ${nm(r.b)}: ${r.l}${r.plan?' (spec only)':''}`).join(' · ')};
+    drawRel(SCH.ext, single ? rs[0].id : 'agg:'+key, a, b, data, true, 'lod-mid');
+  });
+}
+function applyStatusFilter(){ document.querySelectorAll('.legend button').forEach(b=>{ const on=b.getAttribute('aria-pressed')==='true'; svg.querySelectorAll(`.edge[data-status="${b.dataset.status}"]`).forEach(e=>e.classList.toggle('hidden-status',!on)); }); }
+function setOpen(ids, open) {
+  ids.forEach(id=>{ open ? expanded.add(id) : expanded.delete(id); });
+  svg.querySelectorAll('.inner').forEach(g=>{ const on=expanded.has(g.dataset.box); g.style.display = on?'':'none'; NODES[g.dataset.box]?.el.classList.toggle('open',on); });
+  if (view==='system') renderSystemEdges(); else renderSchemaEdges();
+  applyStatusFilter(); applyHL();
+}
+
+/* ----------------------------------------------------------------------------
+   PAN / ZOOM
+---------------------------------------------------------------------------- */
+const VIEWB = {system:{x:0,y:0,w:2000,h:1360}, schema:{x:0,y:20,w:2080,h:1180}};
+let view='system', vb={...VIEWB.system};
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function scaleNow(){ const r=svg.getBoundingClientRect(); return Math.min(r.width/vb.w, r.height/vb.h); }
+function setVB(v){ vb=v; svg.setAttribute('viewBox',`${v.x} ${v.y} ${v.w} ${v.h}`); const s=scaleNow(); svg.dataset.lod = s<0.5?'far': s<1.05?'mid':'near'; }
+let anim=null;
+function animateTo(t){ cancelAnimationFrame(anim); if(reduce){ setVB(t); return; } const s={...vb}, t0=performance.now(), D=420;
+  const step=(now)=>{ const k=Math.min(1,(now-t0)/D), e=1-Math.pow(1-k,3); setVB({x:s.x+(t.x-s.x)*e,y:s.y+(t.y-s.y)*e,w:s.w+(t.w-s.w)*e,h:s.h+(t.h-s.h)*e}); if(k<1) anim=requestAnimationFrame(step); }; anim=requestAnimationFrame(step); }
+function fitRect(x,y,w,h,pad=40){ const r=svg.getBoundingClientRect(); const ar=r.width/r.height; let W=w+pad*2, Hh=h+pad*2; if (W/Hh>ar) Hh=W/ar; else W=Hh*ar; animateTo({x:x+w/2-W/2,y:y+h/2-Hh/2,w:W,h:Hh}); }
+function fitView(){ const b=VIEWB[view]; fitRect(b.x,b.y,b.w,b.h,10); }
+function clientToSvg(cx,cy){ const r=svg.getBoundingClientRect(); const s=scaleNow(); const ox=(r.width-vb.w*s)/2, oy=(r.height-vb.h*s)/2; return [vb.x+(cx-r.left-ox)/s, vb.y+(cy-r.top-oy)/s]; }
+function zoomAt(f, cx, cy){ const [px,py]=clientToSvg(cx,cy); const w=Math.min(6000,Math.max(120,vb.w/f)), h=vb.h*(w/vb.w); setVB({x:px-(px-vb.x)*(w/vb.w), y:py-(py-vb.y)*(h/vb.h), w, h}); }
+svg.addEventListener('wheel',ev=>{ ev.preventDefault(); cancelAnimationFrame(anim); zoomAt(Math.exp(-ev.deltaY*0.0016), ev.clientX, ev.clientY); },{passive:false});
+const ptrs=new Map(); let drag=null, moved=false, pinch=null;
+svg.addEventListener('pointerdown',ev=>{ svg.setPointerCapture(ev.pointerId); ptrs.set(ev.pointerId,[ev.clientX,ev.clientY]); moved=false; cancelAnimationFrame(anim);
+  if(ptrs.size===1) drag={x:ev.clientX,y:ev.clientY,vb:{...vb},target:ev.target};
+  if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1])}; drag=null; } });
+svg.addEventListener('pointermove',ev=>{ if(!ptrs.has(ev.pointerId)) return; ptrs.set(ev.pointerId,[ev.clientX,ev.clientY]);
+  if(pinch && ptrs.size===2){ const [a,b]=[...ptrs.values()]; const d=Math.hypot(a[0]-b[0],a[1]-b[1]); zoomAt(d/pinch.d,(a[0]+b[0])/2,(a[1]+b[1])/2); pinch.d=d; moved=true; return; }
+  if(!drag) return; const dx=ev.clientX-drag.x, dy=ev.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>4){ moved=true; svg.classList.add('dragging'); }
+  if(moved){ const s=scaleNow(); setVB({...drag.vb, x:drag.vb.x-dx/s, y:drag.vb.y-dy/s}); } });
+function endPtr(ev){ const wasDrag=drag; ptrs.delete(ev.pointerId); if(ptrs.size<2) pinch=null; svg.classList.remove('dragging');
+  if(wasDrag && !moved && ptrs.size===0) onClick(wasDrag.target); if(ptrs.size===0) drag=null; }
+svg.addEventListener('pointerup',endPtr); svg.addEventListener('pointercancel',ev=>{ptrs.delete(ev.pointerId); drag=null; pinch=null;});
+svg.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); onClick(ev.target); } if(ev.key==='Escape') clearFocus(); });
+$('#z-in').onclick=()=>{const r=svg.getBoundingClientRect(); zoomAt(1.4,r.left+r.width/2,r.top+r.height/2);};
+$('#z-out').onclick=()=>{const r=svg.getBoundingClientRect(); zoomAt(1/1.4,r.left+r.width/2,r.top+r.height/2);};
+$('#z-fit').onclick=()=>{ clearFocus(); fitView(); };
+$('#z-close').onclick=()=>{ setOpen([...expanded],false); clearFocus(); fitView(); };
+addEventListener('resize',()=>setVB(vb));
+
+/* ----------------------------------------------------------------------------
+   SELECTION + PANEL
+---------------------------------------------------------------------------- */
+let panelTab='flow', selected=null, flowTrack='neurostore', flowStep=-1;
+function applyHL(){ svg.querySelectorAll('.hl').forEach(n=>n.classList.remove('hl')); svg.classList.toggle('focus', hlIds.length>0);
+  hlIds.forEach(id=>{ const n=NODES[id]; if(n) n.el.classList.add('hl'); if(!isOpen(id)) NODES[owner(id)]?.el.classList.add('hl'); }); }
+function clearFocus(){ hlIds=[]; applyHL(); }
+function highlight(ids){ hlIds=ids||[]; applyHL(); }
+const edgeEnds = (d) => d.ends || [Array.isArray(d.a)?d.a[0]:d.a, Array.isArray(d.b)?d.b[0]:d.b];
+const isContainer = (id) => ['box','cluster'].includes(NODES[id]?.kind);
+function connected(id){ const out=new Set([id]); const cont=isContainer(id);
+  for (const k in NODES) { const n=NODES[k]; if(n.kind!=='edge') continue; const ends=edgeEnds(n.data);
+    if (ends.includes(id) || (cont && ends.some(x=>owner(x)===id))) { out.add(k); ends.forEach(x=>out.add(x)); } }
+  if (cont) for (const k in NODES) if (owner(k)===id) out.add(k);
+  return [...out]; }
+function onClick(target){
+  const g = target.closest && target.closest('.node'); if(!g){ clearFocus(); return; }
+  const id=g.dataset.id; const n=NODES[id]; if(!n) return;
+  selected=id;
+  if (isContainer(id) && innerCount(id)) {
+    if (expanded.has(id)) setOpen([id], false);
+    else { setOpen([id], true); fitRect(n.x,n.y,n.w,n.h,30); }
+    highlight(connected(id));
+  } else {
+    if (isContainer(id)) fitRect(n.x,n.y,n.w,n.h,30);
+    highlight(n.data.isContract ? [id, ...n.data.users] : connected(id));
+  }
+  showTab('detail');
+}
+function list(title, arr){ return arr&&arr.length? `<h3>${title}</h3><ul>${arr.map(x=>`<li>${H(x)}</li>`).join('')}</ul>`:''; }
+function refs(arr, repoKey){ if(!arr||!arr.length) return ''; return `<h3>Code</h3><ul>${arr.map(r=>`<li class="ref">${H(r)}</li>`).join('')}</ul>`; }
+function statusPill(st){ return st==='plan'?'<span class="pill plan">intended, not built</span>': st==='spec'?'<span class="pill spec">spec only (draft)</span>': st==='map'?'<span class="pill impl">cross-schema join</span>':'<span class="pill impl">built</span>'; }
+function repoLine(key){ const r=REPOS[key]; return r? `<span>${H(r.gh)} @ ${H(r.sha)} (${H(r.br)}, ${H(r.date)})</span>`:''; }
+function nameOf(id){ const n=NODES[id]; if(!n) return id; const d=n.data; return d.title||d.label||d.name||id; }
+function renderDetail(){
+  const p=$('#panel'); const n=NODES[selected];
+  if(!n){ p.innerHTML=`<h2>Nothing selected</h2><p>Click a box to open it and zoom in, a stage chip for its inputs, outputs and code, or an arrow for what crosses between applications. In the Data schemas view, click an entity for its fields and relations.</p>`; return; }
+  const d=n.data;
+  if (n.kind==='edge'){
+    const a=Array.isArray(d.a)?d.a[0]:d.a, b=Array.isArray(d.b)?d.b[0]:d.b;
+    p.innerHTML=`<div class="meta">${statusPill(d.st)}</div><h2>${H(d.label||'relation')}</h2>
+      <p><button class="linkbtn" data-go="${a}">${H(nameOf(a))}</button> → <button class="linkbtn" data-go="${b}">${H(nameOf(b))}</button></p>
+      ${d.desc?`<p>${H(d.desc)}</p>`:''}${refs(d.refs)}`;
+  } else if (n.kind==='ent'){
+    const c=CL[d.cl]; const rel=RELS.filter(r=>r.a===d.id||r.b===d.id);
+    p.innerHTML=`<div class="meta"><span class="swatch" style="background:${col(c.c)}"></span>${H(c.title)}${d.line?` · data.py:${d.line}`:''}</div><h2>${H(d.name)}</h2>
+      <h3>Fields</h3><table class="f">${d.fields.map(([f,x])=>`<tr><td>${H(f)}</td><td>${H(x)}</td></tr>`).join('')}</table>
+      <h3>Relations</h3><ul class="rels">${rel.map(r=>{const other=r.a===d.id?r.b:r.a; const dir=r.a===d.id?'→':'←'; return `<li>${dir} <button class="linkbtn" data-go="${other}">${H(NODES[other]?.data.name||other)}</button> <span style="color:var(--ink-3)">${H(r.l||'')}${r.map?' · join':''}</span>${r.d?`<div style="color:var(--ink-2);font-size:12px">${H(r.d)}</div>`:''}</li>`;}).join('')}</ul>
+      <div class="meta" style="margin-top:12px">${repoLine(c.repo)}</div>`;
+  } else {
+    const box = n.kind==='chip'? BOX[d.box] : d; const repo = box.repo;
+    const sub = n.kind==='chip' ? CHIPS.filter(c=>c.box===d.box) : CHIPS.filter(c=>c.box===selected);
+    const inE = EDGES.filter(e=>!e.internal && (e.b[0]===selected || (n.kind==='box' && CHIPS.find(c=>c.id===e.b[0])?.box===selected)));
+    const outE= EDGES.filter(e=>!e.internal && (e.a[0]===selected || (n.kind==='box' && CHIPS.find(c=>c.id===e.a[0])?.box===selected)));
+    const eLine = (e,dir)=>{ const o = dir==='in'? e.a[0]:e.b[0]; return `<li><button class="linkbtn" data-go="${e.id}">${H(e.label)}</button> ${dir==='in'?'from':'to'} ${H(nameOf(o))} ${e.st!=='impl'?statusPill(e.st):''}</li>`; };
+    p.innerHTML=`<div class="meta"><span class="swatch" style="background:${col(box.c)}"></span>${H(n.kind==='chip'?box.title:'application')} ${d.status&&d.status!=='impl'?statusPill(d.status):''}</div>
+      <h2>${H(d.title||d.label)}</h2>${d.sub&&n.kind==='chip'?`<p style="color:var(--ink-2)">${H(d.sub)}</p>`:''}
+      ${d.desc?`<p>${H(d.desc)}</p>`:''}${list('Inputs',d.inputs)}${list('Outputs',d.outputs)}${list('Services & models',d.services)}${refs(d.refs)}
+      ${inE.length?`<h3>Arrives</h3><ul>${inE.map(e=>eLine(e,'in')).join('')}</ul>`:''}${outE.length?`<h3>Leaves</h3><ul>${outE.map(e=>eLine(e,'out')).join('')}</ul>`:''}
+      ${n.kind==='box'&&sub.length?`<h3>Inside (${sub.length})</h3><ul class="rels">${sub.map(c=>`<li><button class="linkbtn" data-go="${c.id}">${H(c.label)}</button> <span style="color:var(--ink-3)">${H(c.sub||'')}</span></li>`).join('')}</ul>`:''}
+      ${n.kind==='chip'?`<p style="margin-top:12px"><button class="btn" data-zoom="${d.box}">Zoom to ${H(box.title)}</button></p>`:''}
+      ${repo?`<div class="meta" style="margin-top:12px">${repoLine(repo)}</div>`:''}`;
+  }
+}
+function renderFlow(){
+  const steps=FLOWS[flowTrack];
+  $('#panel').innerHTML=`<h2>How a study moves</h2><p>Two routes end in NiMARE. Pick one and step through it; the diagram lights up what each step touches.</p>
+   <div class="track"><button class="btn" id="tr-ns" aria-pressed="${flowTrack==='neurostore'}" style="${flowTrack==='neurostore'?'border-color:var(--sel);color:var(--ink)':''}">neurostore route</button><button class="btn" id="tr-au" aria-pressed="${flowTrack==='autonima'}" style="${flowTrack==='autonima'?'border-color:var(--sel);color:var(--ink)':''}">autonima route</button></div>
+   <ol class="steps">${steps.map((s,i)=>`<li><button data-step="${i}" aria-current="${i===flowStep}"><span class="n">${String(i+1).padStart(2,'0')}</span><span><b>${H(s.t)}</b><span class="d">${H(s.d)}</span></span></button></li>`).join('')}</ol>
+   <p style="margin-top:10px;display:flex;gap:6px"><button class="btn" id="st-prev">Previous</button><button class="btn" id="st-next">Next step</button><button class="btn" id="st-clear">Clear</button></p>`;
+  $('#tr-ns').onclick=()=>{flowTrack='neurostore';flowStep=-1;if(view!=='system')setView('system');clearFocus();renderFlow();};
+  $('#tr-au').onclick=()=>{flowTrack='autonima';flowStep=-1;if(view!=='system')setView('system');clearFocus();renderFlow();};
+  $('#st-prev').onclick=()=>gotoStep(Math.max(0,flowStep-1));
+  $('#st-next').onclick=()=>gotoStep(Math.min(steps.length-1,flowStep+1));
+  $('#st-clear').onclick=()=>{flowStep=-1;setOpen([...expanded],false);clearFocus();fitView();renderFlow();};
+}
+function gotoStep(i){
+  if(view!=='system') setView('system');
+  flowStep=i; const s=FLOWS[flowTrack][i];
+  const need=new Set(); s.ids.forEach(id=>{ const n=NODES[id]; const o = owner(id) || (n&&n.data.internal ? owner(n.data.a[0]) : null); if(o) need.add(o); });
+  setOpen([...expanded].filter(x=>!need.has(x)), false); setOpen([...need], true);
+  highlight(s.ids);
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  s.ids.forEach(id=>{ const n=NODES[id]; if(!n) return; let b; if(n.kind==='edge'){ const bb=n.path.getBBox(); b={x:bb.x,y:bb.y,w:bb.width,h:bb.height}; } else b=n; x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.w);y1=Math.max(y1,b.y+b.h); });
+  if(x0<1e9) fitRect(x0,y0,x1-x0,y1-y0,60);
+  renderFlow();
+}
+function renderGaps(){
+  $('#panel').innerHTML=`<h2>Where it differs from the plan</h2><p>Each item compares the intended architecture with what the latest default branches actually do.</p>
+   ${GAPS.map(([s,t,d])=>`<div class="gap ${s==='plan'?'':s}"><b>${H(t)}</b>${H(d)}</div>`).join('')}`;
+}
+function renderSrc(){
+  $('#panel').innerHTML=`<h2>Grounded in</h2><p>Shallow clones of each repository's default branch, read on 2026-10-20. File references in the Details tab are relative to each repo root.</p>
+   <table class="repos">${Object.entries(REPOS).filter(([k])=>k!=='compose').map(([k,r])=>`<tr><td>${H(r.name.replace(' (store)',''))}</td><td class="ref">${H(r.gh)}</td><td class="ref">${H(r.sha)}</td><td>${H(r.date)}</td></tr>`).join('')}</table>
+   <h3>Reading the diagram</h3><ul><li>Solid arrows exist in code today.</li><li>Dashed amber arrows are hand-offs you described that are not built yet.</li><li>Dotted grey marks the draft review API, present only in neurostore-spec.</li><li>Blue dashed arrows in the schema view join entities across schemas (shared keys, copied fields, API projections).</li></ul>
+   <h3>Not shown</h3><p>neurostore-text-extraction, ns-validate (Label Studio review at validate.neurostore.xyz) and the SDK generator repos sit beside this flow but were not part of this read.</p>`;
+}
+function showTab(t){ panelTab=t; ['flow','detail','gaps','src'].forEach(k=>$('#p-'+k).setAttribute('aria-selected',k===t)); ({flow:renderFlow,detail:renderDetail,gaps:renderGaps,src:renderSrc})[t](); $('#panel').scrollTop=0; }
+['flow','detail','gaps','src'].forEach(k=>$('#p-'+k).onclick=()=>showTab(k));
+$('#panel').addEventListener('click',ev=>{
+  const s=ev.target.closest('[data-step]'); if(s){ gotoStep(+s.dataset.step); return; }
+  const go=ev.target.closest('[data-go]'); if(go){ const id=go.dataset.go; const n=NODES[id]; if(!n) return; selected=id;
+    const o = owner(id) || (n.data.internal ? owner(n.data.a[0]) : null); if(o && !expanded.has(o)) setOpen([o], true);
+    if(n.kind==='edge'){ highlight([id, ...(Array.isArray(n.data.a)?[n.data.a[0],n.data.b[0]]:[n.data.a,n.data.b])]); const bb=n.path.getBBox(); fitRect(bb.x,bb.y,bb.width,bb.height,80); }
+    else { highlight(n.data.isContract?[id,...n.data.users]:connected(id)); fitRect(n.x,n.y,n.w,n.h, n.kind==='box'?30:220); }
+    renderDetail(); return; }
+  const z=ev.target.closest('[data-zoom]'); if(z){ const n=NODES[z.dataset.zoom]; setOpen([z.dataset.zoom],true); fitRect(n.x,n.y,n.w,n.h,30); }
+});
+
+function setView(v){ view=v; $('#g-system').style.display = v==='system'?'':'none'; $('#g-schema').style.display = v==='schema'?'':'none';
+  if (v==='system') renderSystemEdges(); else renderSchemaEdges(); applyStatusFilter();
+  $('#v-system').setAttribute('aria-selected',v==='system'); $('#v-schema').setAttribute('aria-selected',v==='schema');
+  clearFocus(); selected=null; const b=VIEWB[v]; setVB({...b}); requestAnimationFrame(fitView);
+  if(panelTab==='detail') renderDetail(); }
+$('#v-system').onclick=()=>setView('system');
+$('#v-schema').onclick=()=>{ setView('schema'); if(panelTab==='flow') showTab('detail'); };
+
+// status filter
+document.querySelectorAll('.legend button').forEach(b=>b.onclick=()=>{ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')!=='true'); applyStatusFilter(); });
+
+renderSystem();
+// schema renders while hidden: getBBox needs layout, so render visible then hide
+$('#g-schema').style.display=''; renderSchema(); $('#g-schema').style.display='none';
+setVB({...VIEWB.system});
+try { const h=location.hash.slice(1); if(h==='schemas') setView('schema'); } catch(e){}
+showTab('flow');
+requestAnimationFrame(fitView);
+})();
+</script>
+
+</body></html>
