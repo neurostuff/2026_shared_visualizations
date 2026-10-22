@@ -6,6 +6,7 @@ Standalone HTML visualizations, served at <https://neurostuff.github.io/2026_sha
 | --- | --- |
 | [Neurostore Pipeline Atlas](https://neurostuff.github.io/2026_shared_visualizations/visualizations/neurostore-pipeline-atlas.html) | Interactive map of the Neurostore ingestion and meta-analysis pipeline. |
 | [Autonima](https://neurostuff.github.io/2026_shared_visualizations/visualizations/NeuroMetaBench%20&%20AutoNIMA%20Tutorial.html) | Tutorial about NeuroMetaBench and Autonima. |
+| [fMRI Coordinate Sharing](https://neurostuff.github.io/2026_shared_visualizations/visualizations/coords_dashboard_static.html) | Dashboard comparing fMRI coordinate sharing in 2016 vs 2026. |
 
 ## Adding a visualization
 
